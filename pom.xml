@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ================================================================
+         PARENT — Spring Boot BOM gestiona versiones de dependencias
+         transitivas. NUNCA sobreescribir versiones de Spring aquí
+         a menos que sea estrictamente necesario.
+    ================================================================ -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.0.5</version>
+		<relativePath/>
+	</parent>
+
+	<!-- ================================================================
+         COORDINATES
+    ================================================================ -->
+	<groupId>com.microbank</groupId>
+	<artifactId>microbank</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>microbank</name>
+	<description>Core Banking Simulator — MicroBank</description>
+
+	<!-- ================================================================
+         PROPERTIES
+         Centralizamos todas las versiones aquí para facilitar upgrades.
+    ================================================================ -->
+	<properties>
+		<java.version>21</java.version>
+		<!-- Usamos 21 (LTS activo). Aprovecha records y sealed classes
+             que usaremos en DTOs y excepciones. -->
+
+		<springdoc.version>2.8.8</springdoc.version>
+		<!-- 2.8.x es compatible con Spring Boot 4.x -->
+
+		<testcontainers.version>1.20.6</testcontainers.version>
+
+		<flyway.version>11.8.2</flyway.version>
+		<!-- Flyway 11.x es compatible con Spring Boot 4.x y PostgreSQL 16 -->
+
+		<jacoco.version>0.8.13</jacoco.version>
+	</properties>
+
+	<!-- ================================================================
+         DEPENDENCIES
+    ================================================================ -->
+	<dependencies>
+
+		<!-- ── CORE ──────────────────────────────────────────────── -->
+
+		<!-- Spring MVC: controllers REST, validación de requests -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Spring Data JPA + Hibernate: ORM, repositorios, @Lock -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Bean Validation: @Valid, @NotNull, @Positive en DTOs/Entities -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Spring Security: autenticación base para REQ-024 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- ── BASE DE DATOS ─────────────────────────────────────── -->
+
+		<!-- Driver JDBC PostgreSQL -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+			<!-- scope=runtime: no se necesita en compile time,
+                 solo cuando la JVM carga el driver. -->
+		</dependency>
+
+		<!-- Flyway: migraciones versionadas del esquema (REQ-023).
+             Incluido desde el inicio para que las tablas se creen
+             via SQL y no via hbm2ddl (nunca usar hbm2ddl en producción). -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>${flyway.version}</version>
+		</dependency>
+		<!-- Módulo específico de Flyway para PostgreSQL (requerido en v10+) -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>${flyway.version}</version>
+		</dependency>
+
+		<!-- ── DEVELOPER EXPERIENCE ──────────────────────────────── -->
+
+		<!-- Docker Compose integration (Spring Boot 3.1+):
+             Levanta docker-compose.yml automáticamente en dev.
+             Solo activo en scope=runtime para que NO afecte tests. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-docker-compose</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ── API DOCUMENTATION ─────────────────────────────────── -->
+
+		<!-- Swagger UI + OpenAPI 3 (REQ-017).
+             Versión 2.5.0 es compatible con Spring Boot 3.2+. -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+
+		<!-- ── TESTING ───────────────────────────────────────────── -->
+
+		<!-- Spring Boot Test: JUnit 5, Mockito, AssertJ, MockMvc -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Spring Security Test: @WithMockUser para REQ-024 -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- TestContainers BOM — orquesta PostgreSQL real en tests (REQ-016) -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<!-- ================================================================
+         BUILD PLUGINS
+    ================================================================ -->
+	<build>
+		<plugins>
+
+			<!-- Spring Boot Maven Plugin: empaqueta fat JAR ejecutable -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!-- JaCoCo: cobertura de código (REQ-015, meta >80%) -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<!-- Instrumenta la JVM antes de ejecutar tests -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals><goal>prepare-agent</goal></goals>
+					</execution>
+					<!-- Genera reporte HTML después de los tests -->
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals><goal>report</goal></goals>
+					</execution>
+					<!-- Falla el build si cobertura < 80% -->
+					<execution>
+						<id>check</id>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.80</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+							<!-- Excluimos clases que no deben contar
+                                 para cobertura: configs, DTOs, main -->
+							<excludes>
+								<exclude>com/microbank/MicrobankApplication.class</exclude>
+								<exclude>com/microbank/config/**</exclude>
+								<exclude>com/microbank/shared/response/**</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Surefire: ejecuta tests unitarios (archivos *Test.java) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Tests de integración (*IT.java) se excluyen aquí
+                         y se ejecutan con Failsafe en fase verify -->
+					<excludes>
+						<exclude>**/*IT.java</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
+			<!-- Failsafe: ejecuta tests de integración (*IT.java).
+                 Separar unitarios de integración es crítico para CI/CD:
+                 los unitarios son rápidos (<30s), los de integración
+                 lentos (levantan Docker). -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<includes>
+						<include>**/*IT.java</include>
+						<include>**/*IntegrationTest.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>

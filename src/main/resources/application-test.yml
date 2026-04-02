@@ -1,0 +1,32 @@
+# src/test/resources/application-test.yml
+#
+# Este perfil se activa automáticamente en los tests de integración.
+# Sobreescribe SOLO lo que necesita cambiar respecto a application.yml.
+
+spring:
+
+  docker:
+    compose:
+      enabled: false
+      # Crítico: desactivar docker-compose en tests.
+      # TestContainers provee su propia instancia PostgreSQL.
+
+  jpa:
+    show-sql: true
+    # En tests de integración, útil ver las queries para debuggear.
+
+  flyway:
+    enabled: true
+    # Flyway corre las migraciones sobre el PostgreSQL de TestContainers.
+    # Así los tests usan el mismo esquema que producción.
+    clean-on-validation-error: true
+    # Si hay conflicto de checksum en tests, limpia y re-aplica.
+    # NUNCA activar esto en producción.
+
+logging:
+  level:
+    com.microbank: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    # En tests de integración queremos ver todo el SQL para diagnosticar
+    # problemas de locking, deadlocks, etc.

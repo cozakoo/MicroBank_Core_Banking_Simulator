@@ -1,0 +1,105 @@
+# src/main/resources/application.yml
+# Configuración principal de MicroBank.
+# Perfiles: default (dev local), test (sobreescrito por application-test.yml)
+
+spring:
+
+  application:
+    name: microbank
+
+  # ── DOCKER COMPOSE ────────────────────────────────────────────────
+  docker:
+    compose:
+      enabled: true
+      # spring-boot-docker-compose levanta docker-compose.yml
+      # automáticamente. Se desactiva en profile=test (TestContainers
+      # provee su propia BD).
+      lifecycle-management: start-and-stop
+      # Opciones: start-only | start-and-stop | none
+
+
+  # ── JPA / HIBERNATE ───────────────────────────────────────────────
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+      # Opciones: none | validate | create | update
+      # - none: Hibernate no toca el esquema (usamos en dev hasta tener Flyway listo)
+      # - validate: Hibernate verifica que el esquema coincide con las entidades (prod)
+      # - create/update: NUNCA en producción — puede borrar datos
+      # TODO REQ-023: cambiar a 'validate' cuando tengamos scripts Flyway
+    show-sql: false
+    # En producción siempre false. Para debug puntual,
+    # activar el log de Hibernate abajo.
+    properties:
+      hibernate:
+        format_sql: true
+        # Formatea el SQL en los logs para legibilidad
+        default_schema: public
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+          # Agrupa INSERTs/UPDATEs en batches para mejor performance.
+        order_inserts: true
+        order_updates: true
+        # Ambos necesarios para que batch_size funcione correctamente.
+
+  # ── FLYWAY ────────────────────────────────────────────────────────
+  flyway:
+    enabled: false #true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    # baseline-on-migrate: útil si la BD ya existe (dev).
+    # En una BD nueva, Flyway crea la tabla flyway_schema_history
+    # y ejecuta todos los scripts en orden.
+    validate-on-migrate: true
+    # Verifica checksums de scripts ya aplicados.
+    # Si alguien modifica un script ya ejecutado, falla inmediatamente.
+
+  # ── SECURITY (configuración mínima, se expande en REQ-024) ────────
+  security:
+    user:
+      name: admin
+      password: admin123
+      # Solo para desarrollo inicial. En REQ-024 reemplazamos
+      # esto con UserDetailsService y BCrypt.
+
+# ── SERVER ──────────────────────────────────────────────────────────
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    # Incluir detalles de error en respuestas (solo en dev).
+    # En producción, cambiar a never para no exponer stack traces.
+
+# ── SPRINGDOC / SWAGGER ─────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+  show-actuator: false
+
+# ── LOGGING ─────────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    com.microbank: DEBUG
+    # Nuestro código en DEBUG para ver logs de negocio.
+    org.springframework.transaction: DEBUG
+    # Ver apertura/cierre/rollback de transacciones. Crítico para REQ-006.
+    org.hibernate.SQL: INFO
+    # Cambiar a DEBUG para ver las queries SQL generadas.
+    # No en prod — cada query generaría una línea de log.
+    org.hibernate.orm.jdbc.bind: TRACE
+    # Muestra los parámetros bindeados en las queries.
+    # Solo activar en debugging puntual.
+    com.zaxxer.hikari: INFO
+    # Pool de conexiones: activar DEBUG si hay problemas de conexión.
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    # Formato estándar con timestamp, thread, nivel y logger corto.

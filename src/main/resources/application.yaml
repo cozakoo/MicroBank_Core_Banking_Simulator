@@ -102,4 +102,4 @@ logging:
     # Pool de conexiones: activar DEBUG si hay problemas de conexión.
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-    # Formato estándar con timestamp, thread, nivel y logger corto.
+    # Formato estándar con timestamp, thread, nivel y logger corto. #

@@ -1,0 +1,20 @@
+ Opción 1: Con Docker (recomendado)                                                                                                               
+                                                                                                                                                     docker-compose up -d                                                                                                                             
+  Acceso: http://localhost:8080 | Swagger: http://localhost:8080/swagger-ui.html                                                                   
+
+  Opción 2: Local (sin Docker)
+
+  Preparar entorno:
+  mvn clean install
+
+  Levantar PostgreSQL (tienes que tenerlo instalado o usar Docker solo para BD):
+  docker-compose up -d postgres
+
+  Ejecutar app:
+  mvn spring-boot:run
+
+  Tests
+
+  mvn test                                    # Todos los tests
+  mvn test -Dtest=**/*IntegrationTest.java   # Solo integration tests
+  mvn test jacoco:report                      # Con coverage

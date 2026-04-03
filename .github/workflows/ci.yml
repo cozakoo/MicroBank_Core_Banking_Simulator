@@ -1,0 +1,85 @@
+name: MicroBank CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  # Job for building and running unit/integration tests
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build with Maven
+      run: mvn -B clean package --file pom.xml
+
+    - name: Run Tests
+      run: mvn test
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: target/surefire-reports
+
+  # Job for checking code quality (Jacoco coverage)
+  code-quality:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Run Tests with Coverage
+      run: mvn -B clean test
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: target/site/jacoco
+      if: always()
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        directory: target/site/jacoco
+        files: jacoco.xml
+        fail_ci_if_error: false
+      if: always()
+
+  # Job for building the Docker image on push to main
+  deploy-docker:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: code-quality
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker Image
+      run: docker build -t microbank/core-simulator:latest .
+
+    - name: Docker Image Security Scan
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # If applicable
+      with:
+        image: microbank/core-simulator:latest
+        args: --file=Dockerfile
+      continue-on-error: true

@@ -44,17 +44,25 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: 'maven'
 
-    - name: Generate Coverage Report
-      run: mvn -B test jacoco:report
+    - name: Run Tests with Coverage
+      run: mvn -B clean test
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: target/site/jacoco
+      if: always()
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        token: ${{ secrets.CODECOV_TOKEN }} # If applicable
         directory: target/site/jacoco
         files: jacoco.xml
         fail_ci_if_error: false
+      if: always()
 
   # Job for building the Docker image on push to main
   deploy-docker:

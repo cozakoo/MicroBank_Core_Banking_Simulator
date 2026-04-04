@@ -46,7 +46,7 @@ mvn test
 
 ### 1️⃣ Crear una Rama
 
-**Formato:** `sprint<nro>/req_00<nro>_<nombre_requerimiento>`
+**Formato obligatorio:** `sprint<nro>/req_00<nro>_<nombre_requerimiento>`
 
 ```bash
 git checkout develop
@@ -68,9 +68,26 @@ git push -u origin sprint1/req_002_entidad_account
 ```
 
 En GitHub:
-- Base: `develop`
-- Título: Descripción breve del REQ
-- Descripción: Qué cambia, cómo testear
+- **Base:** `develop` (nunca a `main` — está protegida)
+- **Título:** `REQ-XXX: Descripción breve del requerimiento`
+- **Descripción:**
+  - Qué se implementó
+  - Por qué se hizo así
+  - Cómo testear
+  - `Fixes #XX` (número del issue si aplica)
+
+### 4️⃣ Code Review (CODEOWNERS)
+
+- Los CODEOWNERS se auto-solicitan via [`.github/CODEOWNERS`](.github/CODEOWNERS)
+- Esperá feedback de Martin (@cozakoo) o Lucas (@Lkss01)
+- Responde comentarios y haz cambios solicitados
+- Los nuevos commits se agregan automáticamente al PR
+
+### 5️⃣ Mergeo a `develop`
+
+Una vez aprobado y tests pasen (GitHub Actions):
+- El maintainer mergea a `develop`
+- **No mergear directamente** — usar UI de GitHub
 
 ---
 
@@ -136,16 +153,90 @@ mvn test jacoco:report            # Con cobertura
 
 ### Checklist
 - [ ] Rama desde `develop`
-- [ ] Tests pasan
+- [ ] Tests pasan (`mvn test`)
 - [ ] Build completo (`mvn clean install`)
-- [ ] Documentación actualizada
+- [ ] Commits con mensajes Conventional Commits
+- [ ] Documentación actualizada si es necesario
+- [ ] Sin código comentado
+
+### Descripción Recomendada
+
+```markdown
+## Descripción
+Breve explicación de qué se implementó.
+
+## Cambios
+- Cambio 1
+- Cambio 2
+
+## Cómo testear
+1. Ejecutar `mvn test -Dtest=NombreTest`
+2. Verificar que X funciona
+
+## Relacionado
+Fixes #42
+```
+
+---
+
+## Releases
+
+### Crear una Release (Solo Maintainers)
+
+**1. Actualizar versión en `pom.xml`:**
+```xml
+<version>0.1.0</version>
+```
+
+**2. Commit y tag:**
+```bash
+git add pom.xml
+git commit -m "chore: bump version to 0.1.0"
+git tag -a v0.1.0 -m "Release v0.1.0 - descripción"
+git push origin v0.1.0
+```
+
+**3. Compilar:**
+```bash
+mvn clean package -DskipTests
+```
+
+**4. En GitHub (crear release manual):**
+- https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases
+- "Create a new release"
+- Tag: `v0.1.0`
+- Title: `v0.1.0 - Feature Description`
+- Descripción: Features, bugs fixes, cambios
+- Adjuntar JAR desde `target/microbank-0.1.0.jar`
+- "Publish release"
+
+**5. Mergear a `main` (protegida):**
+```bash
+git checkout main
+git pull
+git merge develop
+git push origin main
+```
+
+---
+
+## Ramas Protegidas
+
+- **`main`** — Producción: Requiere PR aprobado + tests pasando + CODEOWNERS review
+- **`develop`** — Integración: Requiere PR aprobado
+
+Ver detalles en [.github/CODEOWNERS](.github/CODEOWNERS)
 
 ---
 
 ## Contacto
 
+**Maintainers:**
 - **Martín Arcos Vargas** — [@cozakoo](https://github.com/cozakoo)
 - **Lucas** — [@Lkss01](https://github.com/Lkss01)
+
+**CODEOWNERS (auto-request reviews):**
+Ver [.github/CODEOWNERS](.github/CODEOWNERS) para saber quién revisa cada área
 
 ---
 

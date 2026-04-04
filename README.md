@@ -228,9 +228,67 @@ Decisiones arquitectónicas detalladas y justificadas en `docs/adr`:
 
 Revisa [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) para:
 - Setup de desarrollo
-- Workflow de contribución
-- Convenciones de código y commits
+- Workflow de contribución: `sprint<nro>/req_00<nro>_<nombre>`
+- Convenciones de código y commits (Conventional Commits)
 - Estándares de testing
+
+### Protección de Ramas
+
+- **`main`** — Protegida: Requiere PR aprobado + tests pasando + Code review de CODEOWNERS
+- **`develop`** — Requiere PR aprobado
+- Ver detalles de protección en [.github/CODEOWNERS](.github/CODEOWNERS)
+
+### Releases & Versionado
+
+Versión actual: **v0.1.0** (Initial Release: Transaction Entity & Pessimistic Locking)
+
+**Próximas releases:**
+- v0.2.0 — AccountService + TransferService
+- v0.3.0 — REST API completa
+- v1.0.0 — Producción
+
+Ver todas en [Releases](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
+
+### Consumir MicroBank como Dependencia
+
+MicroBank se publica automáticamente en GitHub Packages. Para usar en otro proyecto:
+
+**1. Configurar `~/.m2/settings.xml`:**
+```xml
+<servers>
+  <server>
+    <id>github</id>
+    <username>tu_usuario_github</username>
+    <password>tu_github_token_personal</password>
+  </server>
+</servers>
+
+<profiles>
+  <profile>
+    <id>github</id>
+    <repositories>
+      <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/cozakoo/MicroBank_Core_Banking_Simulator</url>
+      </repository>
+    </repositories>
+  </profile>
+</profiles>
+```
+
+**2. Agregar a tu `pom.xml`:**
+```xml
+<dependency>
+    <groupId>com.microbank</groupId>
+    <artifactId>microbank</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+**3. Instalar:**
+```bash
+mvn clean install
+```
 
 ---
 

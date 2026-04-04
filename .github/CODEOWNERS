@@ -1,0 +1,38 @@
+# MicroBank CODEOWNERS
+# Este archivo define quién revisa y aprueba cambios en cada área del proyecto
+# Los PRs que toquen estos archivos requieren aprobación automática del owner
+
+# Core domain y arquitectura
+/src/main/java/com/microbank/domain/ @cozakoo @Lkss01
+/src/main/java/com/microbank/account/ @cozakoo @Lkss01
+
+# API y controllers
+/src/main/java/com/microbank/api/ @cozakoo @Lkss01
+
+# Configuración de Spring y infraestructura
+/src/main/java/com/microbank/config/ @cozakoo
+/src/main/resources/ @cozakoo
+
+# Tests
+/src/test/ @cozakoo @Lkss01
+
+# Build y dependencias
+pom.xml @cozakoo
+.github/workflows/ @cozakoo
+
+# Documentación arquitectónica
+/docs/adr/ @cozakoo
+README.md @cozakoo
+/docs/ @cozakoo
+
+# Guías de desarrollo
+.github/CONTRIBUTING.md @cozakoo
+.github/CODEOWNERS @cozakoo
+
+# Docker
+Dockerfile @cozakoo
+docker-compose.yml @cozakoo
+
+# Configuración del proyecto
+.gitignore @cozakoo
+.claude/CLAUDE.md @cozakoo

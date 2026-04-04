@@ -16,6 +16,14 @@
 	<properties>
 		<java.version>17</java.version>
 	</properties>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub cozakoo Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/cozakoo/MicroBank_Core_Banking_Simulator</url>
+		</repository>
+	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -8,6 +8,13 @@
 [![Coverage](https://img.shields.io/badge/Coverage->80%25-4CAF50?style=flat-square)](https://www.jacoco.org/)
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-blue?style=flat-square)](LICENSE)
 
+## 👥 Autores & Contribuidores
+
+| Rol | Persona | GitHub |
+|---|---|---|
+| **👤 Autor Principal** | Martín Arcos Vargas | [@cozakoo](https://github.com/cozakoo) |
+| **🤝 Co-Desarrollador** | Lucas | [@Lkss01](https://github.com/Lkss01) |
+
 ## 🏦 Descripción del Proyecto
 
 MicroBank es un simulador de banca central de alto rendimiento diseñado para manejar operaciones financieras críticas con precisión absoluta. Este proyecto demuestra principios avanzados de ingeniería de software incluyendo **Domain-Driven Design (DDD)**, **integridad ACID** y **gestión robusta de concurrencia** mediante Pessimistic Locking a nivel de base de datos.
@@ -147,9 +154,9 @@ docker-compose down
 | **Base de Datos** | PostgreSQL 15 |
 | **Containerización** | Docker / Docker Compose |
 | **Documentación API** | Springdoc-OpenAPI (Swagger) |
-| **Testing** | JUnit 5, Mockito, TestContainers |
-| **Coverage** | JaCoCo 0.8.10 |
+| **Testing** | JUnit 5, Mockito, H2 (tests), TestContainers (futuros) |
 | **CI/CD** | GitHub Actions |
+| **Build** | Maven 3.8+ |
 
 ## 🧪 Testing
 
@@ -209,11 +216,21 @@ microbank/
 
 ## 📄 Documentación
 
-Decisiones arquitectónicas detalladas se encuentran en la carpeta `docs/adr`:
+### Architecture Decision Records (ADRs)
 
-- [ADR-001: Domain-Driven Design](docs/adr/ADR-001-domain-driven-design.md)
-- [ADR-002: Aislamiento de Transacciones](docs/adr/ADR-002-transaction-isolation.md)
-- [ADR-003: Estrategia de Manejo de Errores](docs/adr/ADR-003-error-handling.md)
+Decisiones arquitectónicas detalladas y justificadas en `docs/adr`:
+
+- **[ADR-001: Domain-Driven Design](docs/adr/ADR-001-domain-driven-design.md)** — Justificación de la arquitectura DDD, estructura de agregados y separación de responsabilidades
+- **[ADR-002: Aislamiento y Concurrencia en Transacciones](docs/adr/ADR-002-transaction-isolation.md)** — Implementación de Pessimistic Locking para garantizar integridad ACID en operaciones concurrentes
+- **[ADR-003: Estrategia de Manejo de Errores](docs/adr/ADR-003-error-handling.md)** — Manejo centralizado de excepciones, mapeo a HTTP status codes y auditoría de errores
+
+### Guía de Contribución
+
+Revisa [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) para:
+- Setup de desarrollo
+- Workflow de contribución
+- Convenciones de código y commits
+- Estándares de testing
 
 ---
 
@@ -253,16 +270,20 @@ docker-compose ps
 
 ## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Por favor revisa nuestra [Guía de Contribución](.github/CONTRIBUTING.md) para más detalles.
+Las contribuciones son bienvenidas. Por favor revisa nuestra **[Guía de Contribución](.github/CONTRIBUTING.md)** para más detalles sobre:
+- Setup de desarrollo
+- Formato de ramas: `sprint<nro>/req_00<nro>_<nombre_requerimiento>`
+- Convenciones de commits: Conventional Commits
+- Estándares de código: DDD, testing, naming
+- Proceso de Pull Request
 
-### Workflow para Contribuir
+### Resumen Rápido
 
-1. Fork el repositorio
-2. Crea una rama (`git checkout -b feature/nueva-feature`)
-3. Commits con mensaje descriptivo en español
-4. Asegúrate que los tests pasen (`mvn test`)
-5. Push a la rama (`git push origin feature/nueva-feature`)
-6. Abre un Pull Request
+1. Crea rama desde `develop`: `git checkout -b sprint1/req_002_entidad_account`
+2. Trabaja localmente y testea: `mvn test`
+3. Commits con mensajes descriptivos en español
+4. Push: `git push -u origin sprint1/req_002_entidad_account`
+5. Abre PR contra `develop`
 
 ---
 
@@ -272,12 +293,17 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Créditos
 
-**Martín Arcos Vargas**
+### Autor Principal
+**Martín Arcos Vargas** ([@cozakoo](https://github.com/cozakoo))
 - 📧 Email: martinarcosvargas2@gmail.com
-- 🔗 GitHub: [@cozakoo](https://github.com/cozakoo)
 - 🔗 LinkedIn: [martin-arcos](https://linkedin.com/in/martin-arcos)
+- 🌐 Portfolio: [arcosvargas.com](https://arcosvargas.com)
+
+### Co-Desarrollador
+**Lucas** ([@Lkss01](https://github.com/Lkss01))
+- Contribuidor activo en arquitectura, testing y code review
 
 ---
 

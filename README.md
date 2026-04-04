@@ -143,10 +143,12 @@ docker-compose down
 | **Lenguaje** | Java 17 |
 | **Framework** | Spring Boot 3.2.x |
 | **Persistencia** | Spring Data JPA / Hibernate |
+| **Validación** | Jakarta Validation (spring-boot-starter-validation) |
 | **Base de Datos** | PostgreSQL 15 |
 | **Containerización** | Docker / Docker Compose |
 | **Documentación API** | Springdoc-OpenAPI (Swagger) |
 | **Testing** | JUnit 5, Mockito, TestContainers |
+| **Coverage** | JaCoCo 0.8.10 |
 | **CI/CD** | GitHub Actions |
 
 ## 🧪 Testing
@@ -185,13 +187,12 @@ microbank/
 │   ├── api/
 │   │   ├── controller/                    # Controllers REST
 │   │   ├── dto/                           # Data Transfer Objects
-│   │   └── exception/                     # Manejo de excepciones
-│   ├── domain/
-│   │   ├── account/                       # Agregado: Cuentas
-│   │   ├── transfer/                      # Agregado: Transferencias
-│   │   └── audit/                         # Agregado: Auditoría
-│   ├── infrastructure/                    # Implementaciones JPA
-│   └── config/                            # Configuración de Spring
+│   │   └── exception/                     # Manejo de excepciones global
+│   └── account/
+│       └── domain/                        # Agregado: Cuentas y Transacciones
+│           ├── Transaction.java           # Entidad de transacción (REQ-003)
+│           ├── TransactionType.java       # Enum: TRANSFER, DEPOSIT, WITHDRAWAL
+│           └── TransactionStatus.java     # Enum: PENDING, COMPLETED, FAILED, REVERSED
 ├── src/main/resources/
 │   ├── application.yml                    # Config principal
 │   ├── application-dev.yml                # Config desarrollo
@@ -201,8 +202,6 @@ microbank/
 ├── docker-compose.yml                     # Composición de servicios
 ├── pom.xml                                # Dependencias Maven
 ├── Dockerfile                             # Imagen Docker de la app
-├── .gitignore                             # Archivos ignorados en Git
-├── LICENSE                                # Licencia MIT
 └── README.md                              # Este archivo
 ```
 
@@ -282,4 +281,4 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-*Última actualización: 3 de abril, 2026*
+*Última actualización: 4 de abril, 2026*

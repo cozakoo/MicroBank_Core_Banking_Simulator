@@ -17,4 +17,6 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.transaction: DEBUG
+    org.hibernate.engine.transaction: DEBUG
     com.microbank: DEBUG

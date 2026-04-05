@@ -3,20 +3,41 @@ package com.microbank.account.presentation;
 import com.microbank.account.domain.Transaction;
 import com.microbank.account.domain.TransactionStatus;
 import com.microbank.account.domain.TransactionType;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Schema(
+    name = "TransactionResponse",
+    description = "Respuesta con los detalles de una transacción bancaria",
+    example = "{\"id\":\"660e8400-e29b-41d4-a716-446655440000\",\"sourceAccountId\":\"550e8400-e29b-41d4-a716-446655440001\",\"targetAccountId\":\"550e8400-e29b-41d4-a716-446655440002\",\"amount\":500.00,\"type\":\"TRANSFERENCIA\",\"status\":\"COMPLETADA\",\"description\":\"Transferencia exitosa\",\"createdAt\":\"2026-04-05T12:30:00\"}"
+)
 public class TransactionResponse {
 
+    @Schema(description = "ID único de la transacción (UUID)", example = "660e8400-e29b-41d4-a716-446655440000")
     private UUID id;
+
+    @Schema(description = "ID de la cuenta origen", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID sourceAccountId;
+
+    @Schema(description = "ID de la cuenta destino (null para depósitos/retiros)", example = "550e8400-e29b-41d4-a716-446655440002")
     private UUID targetAccountId;
+
+    @Schema(description = "Monto de la transacción en dólares", example = "500.00")
     private BigDecimal amount;
+
+    @Schema(description = "Tipo de transacción (TRANSFERENCIA, DEPOSITO, RETIRO)", example = "TRANSFERENCIA")
     private TransactionType type;
+
+    @Schema(description = "Estado de la transacción (COMPLETADA, PENDIENTE, FALLIDA)", example = "COMPLETADA")
     private TransactionStatus status;
+
+    @Schema(description = "Descripción detallada de la transacción", example = "Transferencia exitosa")
     private String description;
+
+    @Schema(description = "Fecha y hora de creación de la transacción", example = "2026-04-05T12:30:00")
     private LocalDateTime createdAt;
 
     public TransactionResponse() {

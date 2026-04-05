@@ -13,6 +13,19 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tagsSorter: alpha
+    operationsSorter: alpha
+    displayOperationId: true
+    defaultModelsExpandDepth: 1
+    defaultModelExpandDepth: 1
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: false
+
 logging:
   level:
     org.hibernate.SQL: DEBUG

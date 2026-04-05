@@ -1,21 +1,30 @@
 package com.microbank.account.application;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Schema(
+    name = "TransferRequest",
+    description = "Solicitud para realizar una transferencia de fondos entre cuentas",
+    example = "{\"sourceAccountId\":\"550e8400-e29b-41d4-a716-446655440001\",\"targetAccountId\":\"550e8400-e29b-41d4-a716-446655440002\",\"amount\":500.00}"
+)
 public class TransferRequest {
 
     @NotNull(message = "El ID de cuenta origen es obligatorio")
+    @Schema(description = "ID único de la cuenta origen (UUID)", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID sourceAccountId;
 
     @NotNull(message = "El ID de cuenta destino es obligatorio")
+    @Schema(description = "ID único de la cuenta destino (UUID)", example = "550e8400-e29b-41d4-a716-446655440002")
     private UUID targetAccountId;
 
     @NotNull(message = "El monto es obligatorio")
     @Positive(message = "El monto debe ser mayor a cero")
+    @Schema(description = "Monto a transferir en dólares (debe ser mayor a cero)", example = "500.00")
     private BigDecimal amount;
 
     // Constructor por defecto

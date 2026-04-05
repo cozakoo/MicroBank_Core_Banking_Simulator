@@ -6,9 +6,12 @@ import com.microbank.audit.domain.AuditLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,5 +43,30 @@ public class AuditService {
                 savedLog.getId(), accountId, action);
 
         return savedLog;
+    }
+
+    /**
+     * Obtiene todos los logs de auditoría de una cuenta específica.
+     *
+     * @param accountId ID de la cuenta
+     * @return Lista de logs ordenados por timestamp descendente
+     */
+    @Transactional(readOnly = true)
+    public List<AuditLog> getLogsByAccountId(UUID accountId) {
+        log.debug("Obteniendo logs de auditoría para cuenta: {}", accountId);
+        return auditLogRepository.findByAccountIdOrderByTimestampDesc(accountId);
+    }
+
+    /**
+     * Obtiene todos los logs de auditoría con paginación.
+     *
+     * @param pageable Parámetro de paginación
+     * @return Página de logs
+     */
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getAllLogs(Pageable pageable) {
+        log.debug("Obteniendo todos los logs de auditoría. Page: {}, Size: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+        return auditLogRepository.findAll(pageable);
     }
 }

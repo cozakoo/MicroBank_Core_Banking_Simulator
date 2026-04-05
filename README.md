@@ -313,6 +313,86 @@ docker-compose ps
 
 ---
 
+## 📊 Estado del Proyecto
+
+### Versión Actual: v0.2.0
+
+```
+┌────────────────────────────────────────────────────────────┐
+│              FASES COMPLETADAS: 2 de 4                     │
+├────────────────────────────────────────────────────────────┤
+│ ✅ Fase 1: Setup & Dominio            [COMPLETADA]        │
+│    - REQ-001 a REQ-004: 4/4            [100%]             │
+│                                                            │
+│ ✅ Fase 2: Lógica & Transacciones     [COMPLETADA]        │
+│    - REQ-005 a REQ-009: 5/5            [100%]             │
+│                                                            │
+│ ⏳ Fase 3: REST API & Tests            [PRÓXIMA]          │
+│    - REQ-010 a REQ-017: 0/8            [0%]              │
+│                                                            │
+│ ⏳ Fase 4: Infraestructura & Extras   [PENDIENTE]        │
+│    - REQ-018 a REQ-025: 0/8            [0%]              │
+├────────────────────────────────────────────────────────────┤
+│ TOTAL: 9/25 Requerimientos             [36%]             │
+│ Tests: 54 pasando                      [100%]            │
+│ Cobertura: >80%                        [VERIFICADA]      │
+│ Build: SUCCESS                         [✓]               │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Componentes Implementados
+
+| Componente | Estado | Descripción |
+|---|---|---|
+| **Entidades de Dominio** | ✅ | Account, Transaction, AuditLog |
+| **Servicios de Negocio** | ✅ | AccountService, TransferService, DepositWithdrawService, AuditService |
+| **Persistencia (JPA)** | ✅ | Repositories con índices optimizados |
+| **Transacciones ACID** | ✅ | Locking pesimista, aislamiento READ_COMMITTED |
+| **Auditoría** | ✅ | Registro automático de todas las operaciones |
+| **Tests Unitarios** | ✅ | 54 tests (Mockito, TestContainers, JUnit 5) |
+| **Docker** | ✅ | docker-compose.yml, Dockerfile |
+| **API REST** | ⏳ | Próximos: Controllers + OpenAPI |
+| **CI/CD** | ⏳ | GitHub Actions pipeline |
+
+---
+
+## 🗺 Roadmap Detallado
+
+### Fase 1 — Setup & Dominio ✅
+- [x] REQ-001: Setup Spring Boot + PostgreSQL + Docker
+- [x] REQ-002: Entidad Account
+- [x] REQ-003: Entidad Transaction
+- [x] REQ-004: AccountRepository
+
+### Fase 2 — Lógica de Negocio & Transacciones ✅
+- [x] REQ-005: AccountService (Application Layer)
+- [x] REQ-006: TransferService (Transferencias ACID)
+- [x] REQ-007: DepositWithdrawService (Depósitos/Retiros)
+- [x] REQ-008: AuditLog Entity (Auditoría)
+- [x] REQ-009: AuditService (Registro automático)
+
+### Fase 3 — REST API & Tests ⏳
+- [ ] REQ-010: REST API - AccountController
+- [ ] REQ-011: REST API - TransferController
+- [ ] REQ-012: REST API - DepositWithdrawController
+- [ ] REQ-013: REST API - AuditController (Admin)
+- [ ] REQ-014: TransactionConfig
+- [ ] REQ-015: Tests Unitarios (Cobertura >80%)
+- [ ] REQ-016: Tests de Integración (TestContainers)
+- [ ] REQ-017: Documentación API (Swagger/OpenAPI)
+
+### Fase 4 — Infraestructura & Extras ⏳
+- [ ] REQ-018: Docker & docker-compose (finalizar)
+- [ ] REQ-019: CI/CD - GitHub Actions
+- [ ] REQ-020: Documentación de Decisiones Arquitectónicas (ADR)
+- [ ] REQ-021: InputValidator
+- [ ] REQ-022: Response Wrapper
+- [ ] REQ-023: Flyway Migrations (Opcional)
+- [ ] REQ-024: Spring Security (Autenticación Base)
+- [ ] REQ-025: Dashboard Admin (Opcional)
+
+---
+
 ## ❌ Solucionar Problemas
 
 | Problema | Solución |
@@ -365,4 +445,4 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-*Última actualización: 4 de abril, 2026*
+*Última actualización: 4 de abril, 2026 — Fase 1 y 2 completadas (v0.2.0)*

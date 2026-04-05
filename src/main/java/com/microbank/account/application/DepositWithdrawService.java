@@ -75,7 +75,7 @@ public class DepositWithdrawService {
         }
 
         // Obtener cuenta
-        Account account = accountRepository.findByIdForUpdate(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> {
                     log.error("Cuenta no encontrada. ID: {}", accountId);
                     return new AccountNotFoundException("Cuenta no encontrada con ID: " + accountId);
@@ -155,7 +155,7 @@ public class DepositWithdrawService {
         }
 
         // Obtener cuenta
-        Account account = accountRepository.findByIdForUpdate(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> {
                     log.error("Cuenta no encontrada. ID: {}", accountId);
                     return new AccountNotFoundException("Cuenta no encontrada con ID: " + accountId);

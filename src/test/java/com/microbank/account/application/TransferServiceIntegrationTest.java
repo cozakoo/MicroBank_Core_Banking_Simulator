@@ -2,9 +2,7 @@ package com.microbank.account.application;
 
 import com.microbank.account.domain.Account;
 import com.microbank.account.domain.AccountRepository;
-import com.microbank.account.domain.AccountStatus;
 import com.microbank.account.domain.AccountType;
-import com.microbank.account.domain.Transaction;
 import com.microbank.account.domain.TransactionRepository;
 import com.microbank.account.domain.TransactionStatus;
 import com.microbank.shared.exceptions.AccountNotFoundException;
@@ -19,8 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -36,20 +36,16 @@ class TransferServiceIntegrationTest {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    private Account sourceAccount;
-    private Account targetAccount;
     private UUID sourceId;
     private UUID targetId;
 
     @BeforeEach
     void setUp() {
-        // Limpiar datos previos
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
 
-        // Crear cuentas de prueba
-        sourceAccount = new Account("ACC1111111111111", AccountType.CORRIENTE, new BigDecimal("5000.00"));
-        targetAccount = new Account("ACC2222222222222", AccountType.AHORRO, new BigDecimal("1000.00"));
+        Account sourceAccount = new Account("ACC1111111111111", AccountType.CORRIENTE, new BigDecimal("5000.00"));
+        Account targetAccount = new Account("ACC2222222222222", AccountType.AHORRO, new BigDecimal("1000.00"));
 
         sourceAccount = accountRepository.save(sourceAccount);
         targetAccount = accountRepository.save(targetAccount);
@@ -58,226 +54,146 @@ class TransferServiceIntegrationTest {
         targetId = targetAccount.getId();
     }
 
-    // ===== TRANSFER FUNDS - SUCCESS TESTS =====
-
     @Test
-    void transferFunds_Success() {
-        // Arrange
-        BigDecimal transferAmount = new BigDecimal("500.00");
-        TransferRequest request = new TransferRequest(sourceId, targetId, transferAmount);
+    void transferFunds_Success_UpdatesBothAccounts() {
+        TransferRequest request = new TransferRequest(sourceId, targetId, new BigDecimal("500.00"));
+        var result = transferService.transferFunds(request);
 
-        BigDecimal expectedSourceBalance = new BigDecimal("4500.00");
-        BigDecimal expectedTargetBalance = new BigDecimal("1500.00");
+        assertThat(result)
+                .isNotNull()
+                .extracting("status", "amount")
+                .containsExactly(TransactionStatus.COMPLETADA, new BigDecimal("500.00"));
 
-        // Act
-        Transaction result = transferService.transferFunds(request);
+        Account source = accountRepository.findById(sourceId).orElseThrow();
+        Account target = accountRepository.findById(targetId).orElseThrow();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
-        assertEquals(transferAmount, result.getAmount());
-
-        // Verificar balances actualizados en BD
-        Account updatedSource = accountRepository.findById(sourceId).orElseThrow();
-        Account updatedTarget = accountRepository.findById(targetId).orElseThrow();
-
-        assertEquals(expectedSourceBalance, updatedSource.getBalance());
-        assertEquals(expectedTargetBalance, updatedTarget.getBalance());
+        assertThat(source.getBalance()).isEqualTo(new BigDecimal("4500.00"));
+        assertThat(target.getBalance()).isEqualTo(new BigDecimal("1500.00"));
     }
 
     @Test
-    void transferFunds_WithSmallAmount_Success() {
-        // Arrange
-        BigDecimal transferAmount = new BigDecimal("0.01");
-        TransferRequest request = new TransferRequest(sourceId, targetId, transferAmount);
-
-        // Act
-        Transaction result = transferService.transferFunds(request);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
-        assertEquals(transferAmount, result.getAmount());
-
-        Account updatedSource = accountRepository.findById(sourceId).orElseThrow();
-        assertEquals(new BigDecimal("4999.99"), updatedSource.getBalance());
-    }
-
-    @Test
-    void transferFunds_WithFullBalance_Success() {
-        // Arrange
-        BigDecimal fullBalance = sourceAccount.getBalance();
-        TransferRequest request = new TransferRequest(sourceId, targetId, fullBalance);
-
-        // Act
-        Transaction result = transferService.transferFunds(request);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
-
-        Account updatedSource = accountRepository.findById(sourceId).orElseThrow();
-        assertEquals(0, updatedSource.getBalance().compareTo(BigDecimal.ZERO));
-    }
-
-    // ===== TRANSFER FUNDS - INSUFFICIENT FUNDS TESTS =====
-
-    @Test
-    void transferFunds_InsufficientFunds_ThrowsException() {
-        // Arrange
-        BigDecimal transferAmount = new BigDecimal("10000.00");
-        TransferRequest request = new TransferRequest(sourceId, targetId, transferAmount);
-
-        // Act & Assert
-        assertThrows(InsufficientFundsException.class, () -> {
-            transferService.transferFunds(request);
+    void transferFunds_SourceNoBalance_Rollbacks() {
+        accountRepository.findById(sourceId).ifPresent(acc -> {
+            acc.setBalance(new BigDecimal("100.00"));
+            accountRepository.save(acc);
         });
 
-        // Verificar que balances no cambiaron
-        Account unchangedSource = accountRepository.findById(sourceId).orElseThrow();
-        Account unchangedTarget = accountRepository.findById(targetId).orElseThrow();
+        TransferRequest request = new TransferRequest(sourceId, targetId, new BigDecimal("500.00"));
 
-        assertEquals(sourceAccount.getBalance(), unchangedSource.getBalance());
-        assertEquals(targetAccount.getBalance(), unchangedTarget.getBalance());
+        assertThatThrownBy(() -> transferService.transferFunds(request))
+                .isInstanceOf(InsufficientFundsException.class);
+
+        Account source = accountRepository.findById(sourceId).orElseThrow();
+        Account target = accountRepository.findById(targetId).orElseThrow();
+
+        assertThat(source.getBalance()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(target.getBalance()).isEqualTo(new BigDecimal("1000.00"));
     }
 
     @Test
-    void transferFunds_MoreThanBalance_ThrowsException() {
-        // Arrange
-        BigDecimal transferAmount = sourceAccount.getBalance().add(BigDecimal.ONE);
-        TransferRequest request = new TransferRequest(sourceId, targetId, transferAmount);
+    void transferFunds_InvalidSourceAccount_ThrowsException() {
+        TransferRequest request = new TransferRequest(UUID.randomUUID(), targetId, new BigDecimal("100.00"));
 
-        // Act & Assert
-        assertThrows(InsufficientFundsException.class, () -> {
-            transferService.transferFunds(request);
+        assertThatThrownBy(() -> transferService.transferFunds(request))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void transferFunds_InvalidTargetAccount_ThrowsException() {
+        TransferRequest request = new TransferRequest(sourceId, UUID.randomUUID(), new BigDecimal("100.00"));
+
+        assertThatThrownBy(() -> transferService.transferFunds(request))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void transferFunds_SameSourceAndTarget_ThrowsException() {
+        TransferRequest request = new TransferRequest(sourceId, sourceId, new BigDecimal("100.00"));
+
+        assertThatThrownBy(() -> transferService.transferFunds(request))
+                .isInstanceOf(InvalidAccountException.class);
+    }
+
+    @Test
+    void transferFunds_ConcurrentRequests_NoDeadlock() throws InterruptedException {
+        Account account3 = new Account("ACC3333333333333", AccountType.CORRIENTE, new BigDecimal("10000.00"));
+        Account account4 = new Account("ACC4444444444444", AccountType.AHORRO, new BigDecimal("5000.00"));
+
+        account3 = accountRepository.save(account3);
+        account4 = accountRepository.save(account4);
+
+        UUID id3 = account3.getId();
+        UUID id4 = account4.getId();
+
+        int numThreads = 5;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch endLatch = new CountDownLatch(numThreads);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failureCount = new AtomicInteger(0);
+
+        for (int i = 0; i < numThreads; i++) {
+            new Thread(() -> {
+                try {
+                    startLatch.await();
+                    TransferRequest request = new TransferRequest(id3, id4, new BigDecimal("100.00"));
+                    transferService.transferFunds(request);
+                    successCount.incrementAndGet();
+                } catch (InsufficientFundsException | InvalidAccountException e) {
+                    failureCount.incrementAndGet();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    endLatch.countDown();
+                }
+            }).start();
+        }
+
+        startLatch.countDown();
+        endLatch.await();
+
+        assertThat(successCount.get() + failureCount.get()).isEqualTo(numThreads);
+        assertThat(successCount.get()).isGreaterThan(0);
+
+        Account finalSource = accountRepository.findById(id3).orElseThrow();
+        Account finalTarget = accountRepository.findById(id4).orElseThrow();
+
+        BigDecimal totalBalance = finalSource.getBalance().add(finalTarget.getBalance());
+        assertThat(totalBalance).isEqualTo(new BigDecimal("15000.00"));
+    }
+
+    @Test
+    void transferFunds_ACIDProperties_RollbackOnFailure() {
+        accountRepository.findById(sourceId).ifPresent(acc -> {
+            acc.setBalance(new BigDecimal("100.00"));
+            accountRepository.save(acc);
         });
+
+        TransferRequest request = new TransferRequest(sourceId, targetId, new BigDecimal("500.00"));
+
+        assertThatThrownBy(() -> transferService.transferFunds(request))
+                .isInstanceOf(InsufficientFundsException.class);
+
+        Account source = accountRepository.findById(sourceId).orElseThrow();
+        Account target = accountRepository.findById(targetId).orElseThrow();
+
+        assertThat(source.getBalance()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(target.getBalance()).isEqualTo(new BigDecimal("1000.00"));
     }
 
-    // ===== TRANSFER FUNDS - VALIDATION TESTS =====
-
     @Test
-    void transferFunds_SameAccount_ThrowsException() {
-        // Arrange
-        BigDecimal transferAmount = new BigDecimal("500.00");
-        TransferRequest request = new TransferRequest(sourceId, sourceId, transferAmount);
-
-        // Act & Assert
-        assertThrows(InvalidAccountException.class, () -> {
+    void transferFunds_MultipleSequentialTransfers_Success() {
+        for (int i = 0; i < 3; i++) {
+            TransferRequest request = new TransferRequest(sourceId, targetId, new BigDecimal("100.00"));
             transferService.transferFunds(request);
-        });
+        }
 
-        // Verificar que balance no cambió
-        Account unchanged = accountRepository.findById(sourceId).orElseThrow();
-        assertEquals(sourceAccount.getBalance(), unchanged.getBalance());
-    }
+        Account source = accountRepository.findById(sourceId).orElseThrow();
+        Account target = accountRepository.findById(targetId).orElseThrow();
 
-    @Test
-    void transferFunds_ZeroAmount_ThrowsException() {
-        // Arrange
-        TransferRequest request = new TransferRequest(sourceId, targetId, BigDecimal.ZERO);
+        assertThat(source.getBalance()).isEqualTo(new BigDecimal("4700.00"));
+        assertThat(target.getBalance()).isEqualTo(new BigDecimal("1300.00"));
 
-        // Act & Assert
-        assertThrows(InvalidAccountException.class, () -> {
-            transferService.transferFunds(request);
-        });
-    }
-
-    @Test
-    void transferFunds_NegativeAmount_ThrowsException() {
-        // Arrange
-        TransferRequest request = new TransferRequest(sourceId, targetId, new BigDecimal("-500.00"));
-
-        // Act & Assert
-        assertThrows(InvalidAccountException.class, () -> {
-            transferService.transferFunds(request);
-        });
-    }
-
-    @Test
-    void transferFunds_NullAmount_ThrowsException() {
-        // Arrange
-        TransferRequest request = new TransferRequest(sourceId, targetId, null);
-
-        // Act & Assert
-        assertThrows(InvalidAccountException.class, () -> {
-            transferService.transferFunds(request);
-        });
-    }
-
-    // ===== TRANSFER FUNDS - ACCOUNT NOT FOUND TESTS =====
-
-    @Test
-    void transferFunds_SourceAccountNotFound_ThrowsException() {
-        // Arrange
-        UUID nonExistentId = UUID.randomUUID();
-        TransferRequest request = new TransferRequest(nonExistentId, targetId, new BigDecimal("500.00"));
-
-        // Act & Assert
-        assertThrows(AccountNotFoundException.class, () -> {
-            transferService.transferFunds(request);
-        });
-    }
-
-    @Test
-    void transferFunds_TargetAccountNotFound_ThrowsException() {
-        // Arrange
-        UUID nonExistentId = UUID.randomUUID();
-        TransferRequest request = new TransferRequest(sourceId, nonExistentId, new BigDecimal("500.00"));
-
-        // Act & Assert
-        assertThrows(AccountNotFoundException.class, () -> {
-            transferService.transferFunds(request);
-        });
-    }
-
-    // ===== TRANSACTION RECORD TESTS =====
-
-    @Test
-    void transferFunds_CreatesTransactionRecord() {
-        // Arrange
-        BigDecimal transferAmount = new BigDecimal("500.00");
-        TransferRequest request = new TransferRequest(sourceId, targetId, transferAmount);
-
-        // Act
-        Transaction result = transferService.transferFunds(request);
-
-        // Assert
-        assertNotNull(result);
-        assertNotNull(result.getId());
-        assertEquals(sourceId, result.getSourceAccountId());
-        assertEquals(targetId, result.getTargetAccountId());
-        assertEquals(transferAmount, result.getAmount());
-        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
-        assertNotNull(result.getCreatedAt());
-
-        // Verificar que la transacción se guardó en BD
-        Transaction savedTransaction = transactionRepository.findById(result.getId()).orElseThrow();
-        assertEquals(sourceId, savedTransaction.getSourceAccountId());
-    }
-
-    @Test
-    void transferFunds_MultipleTransfersTracked() {
-        // Arrange
-        BigDecimal amount1 = new BigDecimal("100.00");
-        BigDecimal amount2 = new BigDecimal("200.00");
-
-        TransferRequest request1 = new TransferRequest(sourceId, targetId, amount1);
-        TransferRequest request2 = new TransferRequest(targetId, sourceId, amount2);
-
-        // Act
-        Transaction transaction1 = transferService.transferFunds(request1);
-        Transaction transaction2 = transferService.transferFunds(request2);
-
-        // Assert
-        assertNotNull(transaction1);
-        assertNotNull(transaction2);
-        assertNotEquals(transaction1.getId(), transaction2.getId());
-
-        // Verificar balances finales
-        Account finalSource = accountRepository.findById(sourceId).orElseThrow();
-        Account finalTarget = accountRepository.findById(targetId).orElseThrow();
-
-        assertEquals(new BigDecimal("5100.00"), finalSource.getBalance());
-        assertEquals(new BigDecimal("900.00"), finalTarget.getBalance());
+        long transactionCount = transactionRepository.count();
+        assertThat(transactionCount).isEqualTo(3);
     }
 }

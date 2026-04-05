@@ -70,18 +70,18 @@ public class TransferService {
         }
 
         try {
-            // Obtener cuentas con lock pesimista (en orden fijo para evitar deadlock)
+            // Obtener cuentas (en orden fijo para evitar deadlock)
             // Orden: primero la menor UUID, luego la mayor
             UUID minId = sourceId.compareTo(targetId) < 0 ? sourceId : targetId;
             UUID maxId = sourceId.compareTo(targetId) < 0 ? targetId : sourceId;
 
-            Account account1 = accountRepository.findByIdForUpdate(minId)
+            Account account1 = accountRepository.findById(minId)
                     .orElseThrow(() -> {
                         log.error("Cuenta no encontrada. ID: {}", minId);
                         return new AccountNotFoundException("Cuenta no encontrada con ID: " + minId);
                     });
 
-            Account account2 = accountRepository.findByIdForUpdate(maxId)
+            Account account2 = accountRepository.findById(maxId)
                     .orElseThrow(() -> {
                         log.error("Cuenta no encontrada. ID: {}", maxId);
                         return new AccountNotFoundException("Cuenta no encontrada con ID: " + maxId);

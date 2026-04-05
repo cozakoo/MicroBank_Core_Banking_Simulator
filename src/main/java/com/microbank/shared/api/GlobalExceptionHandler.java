@@ -5,6 +5,7 @@ import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InactiveAccountException;
 import com.microbank.shared.exceptions.InsufficientFundsException;
 import com.microbank.shared.exceptions.InvalidAccountException;
+import com.microbank.shared.exceptions.OperationLimitExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -83,6 +84,23 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "INACTIVE_ACCOUNT",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(OperationLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleOperationLimitExceeded(
+            OperationLimitExceededException ex,
+            WebRequest request) {
+        log.warn("Límite de operación excedido: {}", ex.getMessage());
+
+        ErrorResponse response = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "OPERATION_LIMIT_EXCEEDED",
                 ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
         );

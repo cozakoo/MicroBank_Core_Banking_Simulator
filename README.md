@@ -372,14 +372,14 @@ docker-compose ps
 - [x] REQ-009: AuditService (Registro automático)
 
 ### Fase 3 — REST API & Tests ⏳
-- [ ] REQ-010: REST API - AccountController
-- [ ] REQ-011: REST API - TransferController
-- [ ] REQ-012: REST API - DepositWithdrawController
-- [ ] REQ-013: REST API - AuditController (Admin)
-- [ ] REQ-014: TransactionConfig
-- [ ] REQ-015: Tests Unitarios (Cobertura >80%)
-- [ ] REQ-016: Tests de Integración (TestContainers)
-- [ ] REQ-017: Documentación API (Swagger/OpenAPI)
+- [x] REQ-010: REST API - AccountController
+- [x] REQ-011: REST API - TransferController
+- [x] REQ-012: REST API - DepositWithdrawController
+- [x] REQ-013: REST API - AuditController (Admin)
+- [x] REQ-014: TransactionConfig
+- [x] REQ-015: Tests Unitarios (Cobertura >80%)
+- [x] REQ-016: Tests de Integración (TestContainers)
+- [x] REQ-017: Documentación API (Swagger/OpenAPI)
 
 ### Fase 4 — Infraestructura & Extras ⏳
 - [ ] REQ-018: Docker & docker-compose (finalizar)

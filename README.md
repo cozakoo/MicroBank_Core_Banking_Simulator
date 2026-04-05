@@ -143,6 +143,81 @@ docker-compose down
 
 ---
 
+## 📚 Documentación Interactiva de API (Swagger/OpenAPI)
+
+Una vez que la aplicación esté corriendo, puedes explorar y probar todos los endpoints de forma interactiva:
+
+### 🌐 Acceso a Swagger UI
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+**Características:**
+- ✅ 13 endpoints completamente documentados (Accounts, Transfers, Deposits, Audit)
+- ✅ Ejemplos de solicitud/respuesta en tiempo real
+- ✅ Validaciones y restricciones de parámetros
+- ✅ Prueba interactiva: "Try it out" para ejecutar directamente desde el navegador
+- ✅ Códigos de respuesta HTTP documentados (200, 201, 400, 404, 409, 500)
+
+### 📋 Endpoints Disponibles
+
+#### 1️⃣ **Account Management** (5 endpoints)
+```
+GET    /api/v1/accounts                    — Listar todas las cuentas
+GET    /api/v1/accounts/{id}               — Obtener cuenta por ID
+GET    /api/v1/accounts/number/{number}    — Obtener cuenta por número
+POST   /api/v1/accounts                    — Crear nueva cuenta
+PUT    /api/v1/accounts/{id}/status        — Cambiar estado de cuenta
+```
+
+#### 2️⃣ **Transfers** (3 endpoints)
+```
+POST   /api/v1/transfers                   — Realizar transferencia
+GET    /api/v1/transfers/{id}              — Obtener detalles de transferencia
+GET    /api/v1/transfers/account/{id}      — Listar transferencias de cuenta
+```
+
+#### 3️⃣ **Deposits & Withdrawals** (2 endpoints)
+```
+POST   /api/v1/accounts/{id}/deposit       — Realizar depósito
+POST   /api/v1/accounts/{id}/withdraw      — Realizar retiro
+```
+
+#### 4️⃣ **Audit (Admin)** (2 endpoints)
+```
+GET    /api/v1/admin/audit                 — Listar todos los registros de auditoría
+GET    /api/v1/admin/audit/account/{id}    — Listar auditoría de cuenta específica
+```
+
+### 🚀 Ejemplo Práctico en Swagger
+
+1. **Abre** `http://localhost:8080/swagger-ui.html` en tu navegador
+2. **Expande** una sección de endpoints (ej: `Account Management`)
+3. **Haz clic** en un endpoint (ej: `POST /api/v1/accounts`)
+4. **Presiona** botón "Try it out"
+5. **Completa** los parámetros con valores de ejemplo
+6. **Presiona** "Execute"
+7. **Verás** la respuesta en tiempo real
+
+### 📊 Exportar Documentación OpenAPI
+
+Para usar en Postman, Insomnia, u otras herramientas:
+
+```bash
+# Descargar JSON
+curl http://localhost:8080/v3/api-docs > microbank-api.json
+
+# O acceder a YAML
+http://localhost:8080/v3/api-docs.yaml
+```
+
+Luego importa en tu herramienta favorita y prueba los endpoints localmente.
+
+**Más detalles:** Lee [docs/SWAGGER_SETUP.md](docs/SWAGGER_SETUP.md)
+
+---
+
 ## 🛠 Stack Tecnológico
 
 | Categoría | Tecnología |
@@ -240,11 +315,10 @@ Revisa [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) para:
 
 ### Releases & Versionado
 
-Versión actual: **v0.1.0** (Initial Release: Transaction Entity & Pessimistic Locking)
+Versión actual: **v0.3.0** (Fases 1,2 y 3: DDD, TransferService, REST API Completa, Swagger/OpenAPI)
 
 **Próximas releases:**
-- v0.2.0 — AccountService + TransferService
-- v0.3.0 — REST API completa
+- v0.3.0 — CI/CD + GitHub Actions
 - v1.0.0 — Producción
 
 Ver todas en [Releases](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
@@ -319,7 +393,7 @@ docker-compose ps
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│              FASES COMPLETADAS: 2 de 4                     │
+│              FASES COMPLETADAS: 3 de 4                     │
 ├────────────────────────────────────────────────────────────┤
 │ ✅ Fase 1: Setup & Dominio            [COMPLETADA]        │
 │    - REQ-001 a REQ-004: 4/4            [100%]             │
@@ -327,16 +401,17 @@ docker-compose ps
 │ ✅ Fase 2: Lógica & Transacciones     [COMPLETADA]        │
 │    - REQ-005 a REQ-009: 5/5            [100%]             │
 │                                                            │
-│ ⏳ Fase 3: REST API & Tests            [PRÓXIMA]          │
-│    - REQ-010 a REQ-017: 0/8            [0%]              │
+│ ✅ Fase 3: REST API & Tests            [COMPLETADA]       │
+│    - REQ-010 a REQ-017: 8/8            [100%]             │
 │                                                            │
-│ ⏳ Fase 4: Infraestructura & Extras   [PENDIENTE]        │
+│ ⏳ Fase 4: Infraestructura & Extras   [PRÓXIMA]          │
 │    - REQ-018 a REQ-025: 0/8            [0%]              │
 ├────────────────────────────────────────────────────────────┤
-│ TOTAL: 9/25 Requerimientos             [36%]             │
-│ Tests: 54 pasando                      [100%]            │
+│ TOTAL: 17/25 Requerimientos            [68%]             │
+│ Tests: 50 pasando                      [100%]            │
 │ Cobertura: >80%                        [VERIFICADA]      │
 │ Build: SUCCESS                         [✓]               │
+│ Documentación API: Swagger/OpenAPI     [✓]               │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -349,9 +424,10 @@ docker-compose ps
 | **Persistencia (JPA)** | ✅ | Repositories con índices optimizados |
 | **Transacciones ACID** | ✅ | Locking pesimista, aislamiento READ_COMMITTED |
 | **Auditoría** | ✅ | Registro automático de todas las operaciones |
-| **Tests Unitarios** | ✅ | 54 tests (Mockito, TestContainers, JUnit 5) |
-| **Docker** | ✅ | docker-compose.yml, Dockerfile |
-| **API REST** | ⏳ | Próximos: Controllers + OpenAPI |
+| **Tests Unitarios** | ✅ | 50 tests (Mockito, TestContainers, JUnit 5) |
+| **Docker** | ✅ | docker-compose.yml, Dockerfile, servicios completos |
+| **API REST Completa** | ✅ | 5 Controllers + 13 endpoints + Request/Response DTOs |
+| **Documentación API (Swagger/OpenAPI)** | ✅ | Swagger UI + OpenAPI JSON + Ejemplos interactivos |
 | **CI/CD** | ⏳ | GitHub Actions pipeline |
 
 ---
@@ -445,4 +521,4 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-*Última actualización: 4 de abril, 2026 — Fase 1 y 2 completadas (v0.2.0)*
+*Última actualización: 5 de abril, 2026 — Fase 3 completada: REST API completa + Swagger/OpenAPI (v0.2.0)*

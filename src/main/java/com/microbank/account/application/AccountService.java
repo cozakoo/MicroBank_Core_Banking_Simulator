@@ -1,0 +1,157 @@
+package com.microbank.account.application;
+
+import com.microbank.account.domain.Account;
+import com.microbank.account.domain.AccountRepository;
+import com.microbank.account.domain.AccountStatus;
+import com.microbank.shared.exceptions.AccountNotFoundException;
+import com.microbank.shared.exceptions.InvalidAccountException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class AccountService {
+
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    /**
+     * Crea una nueva cuenta bancaria.
+     * Genera automáticamente un número de cuenta único.
+     * @param request DTO con tipo de cuenta y balance inicial
+     * @return Account creada
+     * @throws InvalidAccountException si el balance es inválido
+     */
+    @Transactional
+    public Account createAccount(CreateAccountRequest request) {
+        log.info("Creando nueva cuenta de tipo: {}", request.getAccountType());
+
+        // Validar que el balance sea válido
+        if (request.getInitialBalance() == null || request.getInitialBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAccountException("El balance inicial debe ser mayor a cero");
+        }
+
+        // Generar número de cuenta único
+        String accountNumber = generateUniqueAccountNumber();
+
+        // Crear la entidad Account
+        Account account = new Account(
+                accountNumber,
+                request.getAccountType(),
+                request.getInitialBalance()
+        );
+
+        // Guardar en BD
+        Account savedAccount = accountRepository.save(account);
+        log.info("Cuenta creada exitosamente. ID: {}, Número: {}", savedAccount.getId(), savedAccount.getAccountNumber());
+
+        return savedAccount;
+    }
+
+    /**
+     * Obtiene una cuenta por su ID.
+     * @param id UUID de la cuenta
+     * @return Account
+     * @throws AccountNotFoundException si la cuenta no existe
+     */
+    @Transactional(readOnly = true)
+    public Account getAccountById(UUID id) {
+        log.debug("Buscando cuenta con ID: {}", id);
+
+        return accountRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Cuenta no encontrada. ID: {}", id);
+                    return new AccountNotFoundException("Cuenta no encontrada con ID: " + id);
+                });
+    }
+
+    /**
+     * Obtiene una cuenta por su número.
+     * @param accountNumber número de cuenta
+     * @return Account
+     * @throws AccountNotFoundException si la cuenta no existe
+     */
+    @Transactional(readOnly = true)
+    public Account getAccountByNumber(String accountNumber) {
+        log.debug("Buscando cuenta con número: {}", accountNumber);
+
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> {
+                    log.warn("Cuenta no encontrada. Número: {}", accountNumber);
+                    return new AccountNotFoundException("Cuenta no encontrada con número: " + accountNumber);
+                });
+    }
+
+    /**
+     * Obtiene todas las cuentas.
+     * @return Lista de todas las cuentas
+     */
+    @Transactional(readOnly = true)
+    public List<Account> getAllAccounts() {
+        log.debug("Obteniendo todas las cuentas");
+        return accountRepository.findAll();
+    }
+
+    /**
+     * Actualiza el estado de una cuenta.
+     * @param id UUID de la cuenta
+     * @param newStatus nuevo estado
+     * @return Account actualizada
+     * @throws AccountNotFoundException si la cuenta no existe
+     * @throws InvalidAccountException si el estado es inválido
+     */
+    @Transactional
+    public Account updateAccountStatus(UUID id, AccountStatus newStatus) {
+        log.info("Actualizando estado de cuenta. ID: {}, Nuevo estado: {}", id, newStatus);
+
+        if (newStatus == null) {
+            throw new InvalidAccountException("El estado de la cuenta no puede ser nulo");
+        }
+
+        Account account = getAccountById(id);
+        account.setStatus(newStatus);
+        Account updated = accountRepository.save(account);
+
+        log.info("Estado de cuenta actualizado. ID: {}, Nuevo estado: {}", id, newStatus);
+        return updated;
+    }
+
+    /**
+     * Genera un número de cuenta único.
+     * Formato: ACC + primeros 17 caracteres de UUID sin guiones
+     * @return número de cuenta único
+     */
+    private String generateUniqueAccountNumber() {
+        String accountNumber;
+        int attempts = 0;
+        final int maxAttempts = 10;
+
+        do {
+            if (attempts > 0) {
+                log.warn("Número de cuenta ya existe, generando uno nuevo. Intento: {}", attempts);
+            }
+
+            // Generar número de cuenta: ACC + UUID sin guiones (primeros 17 chars)
+            String uuidWithoutHyphens = UUID.randomUUID().toString().replace("-", "");
+            accountNumber = "ACC" + uuidWithoutHyphens.substring(0, 17);
+            attempts++;
+
+        } while (accountRepository.existsByAccountNumber(accountNumber) && attempts < maxAttempts);
+
+        if (attempts >= maxAttempts) {
+            log.error("No se pudo generar un número de cuenta único después de {} intentos", maxAttempts);
+            throw new InvalidAccountException("No se pudo generar un número de cuenta único");
+        }
+
+        log.debug("Número de cuenta generado: {}", accountNumber);
+        return accountNumber;
+    }
+}

@@ -8,6 +8,8 @@ import com.microbank.account.domain.Transaction;
 import com.microbank.account.domain.TransactionRepository;
 import com.microbank.account.domain.TransactionStatus;
 import com.microbank.account.domain.TransactionType;
+import com.microbank.audit.application.AuditService;
+import com.microbank.audit.domain.AuditAction;
 import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InactiveAccountException;
 import com.microbank.shared.exceptions.InsufficientFundsException;
@@ -45,6 +47,9 @@ public class DepositWithdrawService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private AuditService auditService;
 
     /**
      * Realiza un depósito a una cuenta.
@@ -117,6 +122,10 @@ public class DepositWithdrawService {
 
         log.info("Depósito completado. Account: {}, Amount: {}, TransactionID: {}",
                 account.getAccountNumber(), amount, savedTransaction.getId());
+
+        // Registrar en auditoría
+        String auditDetails = String.format("Depósito de %s", amount);
+        auditService.logAction(accountId, AuditAction.DEPOSITO, auditDetails, null);
 
         return savedTransaction;
     }
@@ -203,6 +212,10 @@ public class DepositWithdrawService {
 
         log.info("Retiro completado. Account: {}, Amount: {}, TransactionID: {}",
                 account.getAccountNumber(), amount, savedTransaction.getId());
+
+        // Registrar en auditoría
+        String auditDetails = String.format("Retiro de %s", amount);
+        auditService.logAction(accountId, AuditAction.RETIRO, auditDetails, null);
 
         return savedTransaction;
     }

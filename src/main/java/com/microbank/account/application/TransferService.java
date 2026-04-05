@@ -6,6 +6,8 @@ import com.microbank.account.domain.Transaction;
 import com.microbank.account.domain.TransactionRepository;
 import com.microbank.account.domain.TransactionStatus;
 import com.microbank.account.domain.TransactionType;
+import com.microbank.audit.application.AuditService;
+import com.microbank.audit.domain.AuditAction;
 import com.microbank.shared.exceptions.AccountLockedException;
 import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InsufficientFundsException;
@@ -31,6 +33,9 @@ public class TransferService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private AuditService auditService;
 
     /**
      * Ejecuta una transferencia de fondos entre dos cuentas.
@@ -129,6 +134,12 @@ public class TransferService {
 
             log.info("Transferencia completada: {} -> {} amount {}. TransactionID: {}",
                     sourceAccount.getAccountNumber(), targetAccount.getAccountNumber(), amount, savedTransaction.getId());
+
+            // Registrar en auditoría
+            String auditDetails = String.format("Transferencia de %s desde %s hacia %s",
+                    amount, sourceAccount.getAccountNumber(), targetAccount.getAccountNumber());
+            auditService.logAction(sourceId, AuditAction.TRANSFERENCIA, auditDetails, null);
+            auditService.logAction(targetId, AuditAction.TRANSFERENCIA, auditDetails, null);
 
             return savedTransaction;
 

@@ -8,60 +8,51 @@ import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InvalidAccountException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class AccountServiceTest {
 
-    @Mock
+    @Autowired
     private AccountRepository accountRepository;
 
-    @InjectMocks
+    @Autowired
     private AccountService accountService;
 
     private CreateAccountRequest validRequest;
-    private Account mockAccount;
     private UUID accountId;
 
     @BeforeEach
     void setUp() {
+        accountRepository.deleteAll();
         accountId = UUID.randomUUID();
         validRequest = new CreateAccountRequest(AccountType.AHORRO, new BigDecimal("1000.00"));
-
-        mockAccount = new Account("ACC123456789012345", AccountType.AHORRO, new BigDecimal("1000.00"));
     }
 
     // ===== CREATE ACCOUNT TESTS =====
 
     @Test
     void createAccount_Success() {
-        // Arrange
-        when(accountRepository.existsByAccountNumber(anyString())).thenReturn(false);
-        when(accountRepository.save(any(Account.class))).thenReturn(mockAccount);
-
         // Act
         Account result = accountService.createAccount(validRequest);
 
         // Assert
         assertNotNull(result);
+        assertNotNull(result.getId());
         assertEquals(AccountType.AHORRO, result.getAccountType());
         assertEquals(new BigDecimal("1000.00"), result.getBalance());
         assertEquals(AccountStatus.ACTIVO, result.getStatus());
-        verify(accountRepository, times(1)).save(any(Account.class));
     }
 
     @Test
@@ -73,7 +64,6 @@ class AccountServiceTest {
         assertThrows(InvalidAccountException.class, () -> {
             accountService.createAccount(invalidRequest);
         });
-        verify(accountRepository, never()).save(any(Account.class));
     }
 
     @Test
@@ -85,7 +75,6 @@ class AccountServiceTest {
         assertThrows(InvalidAccountException.class, () -> {
             accountService.createAccount(invalidRequest);
         });
-        verify(accountRepository, never()).save(any(Account.class));
     }
 
     @Test
@@ -97,24 +86,20 @@ class AccountServiceTest {
         assertThrows(InvalidAccountException.class, () -> {
             accountService.createAccount(invalidRequest);
         });
-        verify(accountRepository, never()).save(any(Account.class));
     }
 
     @Test
     void createAccount_GeneratesUniqueAccountNumber() {
-        // Arrange
-        when(accountRepository.existsByAccountNumber(anyString())).thenReturn(false);
-        when(accountRepository.save(any(Account.class))).thenReturn(mockAccount);
-
         // Act
-        accountService.createAccount(validRequest);
+        Account result1 = accountService.createAccount(validRequest);
+        Account result2 = accountService.createAccount(validRequest);
 
         // Assert
-        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
-        verify(accountRepository).save(accountCaptor.capture());
-        Account savedAccount = accountCaptor.getValue();
-        assertNotNull(savedAccount.getAccountNumber());
-        assertTrue(savedAccount.getAccountNumber().startsWith("ACC"));
+        assertNotNull(result1.getAccountNumber());
+        assertNotNull(result2.getAccountNumber());
+        assertTrue(result1.getAccountNumber().startsWith("ACC"));
+        assertTrue(result2.getAccountNumber().startsWith("ACC"));
+        assertNotEquals(result1.getAccountNumber(), result2.getAccountNumber());
     }
 
     // ===== GET ACCOUNT BY ID TESTS =====
@@ -122,27 +107,25 @@ class AccountServiceTest {
     @Test
     void getAccountById_Success() {
         // Arrange
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(mockAccount));
+        Account savedAccount = accountService.createAccount(validRequest);
 
         // Act
-        Account result = accountService.getAccountById(accountId);
+        Account result = accountService.getAccountById(savedAccount.getId());
 
         // Assert
         assertNotNull(result);
-        assertEquals(mockAccount.getAccountNumber(), result.getAccountNumber());
-        verify(accountRepository, times(1)).findById(accountId);
+        assertEquals(savedAccount.getAccountNumber(), result.getAccountNumber());
     }
 
     @Test
     void getAccountById_NotFound_ThrowsException() {
         // Arrange
-        when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
+        UUID nonExistentId = UUID.randomUUID();
 
         // Act & Assert
         assertThrows(AccountNotFoundException.class, () -> {
-            accountService.getAccountById(accountId);
+            accountService.getAccountById(nonExistentId);
         });
-        verify(accountRepository, times(1)).findById(accountId);
     }
 
     // ===== GET ACCOUNT BY NUMBER TESTS =====
@@ -150,8 +133,8 @@ class AccountServiceTest {
     @Test
     void getAccountByNumber_Success() {
         // Arrange
-        String accountNumber = "ACC123456789012345";
-        when(accountRepository.findByAccountNumber(accountNumber)).thenReturn(Optional.of(mockAccount));
+        Account savedAccount = accountService.createAccount(validRequest);
+        String accountNumber = savedAccount.getAccountNumber();
 
         // Act
         Account result = accountService.getAccountByNumber(accountNumber);
@@ -159,20 +142,17 @@ class AccountServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(accountNumber, result.getAccountNumber());
-        verify(accountRepository, times(1)).findByAccountNumber(accountNumber);
     }
 
     @Test
     void getAccountByNumber_NotFound_ThrowsException() {
         // Arrange
-        String accountNumber = "ACC999999999999999";
-        when(accountRepository.findByAccountNumber(accountNumber)).thenReturn(Optional.empty());
+        String nonExistentNumber = "ACC999999999999999";
 
         // Act & Assert
         assertThrows(AccountNotFoundException.class, () -> {
-            accountService.getAccountByNumber(accountNumber);
+            accountService.getAccountByNumber(nonExistentNumber);
         });
-        verify(accountRepository, times(1)).findByAccountNumber(accountNumber);
     }
 
     // ===== GET ALL ACCOUNTS TESTS =====
@@ -180,10 +160,8 @@ class AccountServiceTest {
     @Test
     void getAllAccounts_Success() {
         // Arrange
-        Account account1 = new Account("ACC111111111111111", AccountType.AHORRO, new BigDecimal("1000.00"));
-        Account account2 = new Account("ACC222222222222222", AccountType.CORRIENTE, new BigDecimal("2000.00"));
-        List<Account> accounts = Arrays.asList(account1, account2);
-        when(accountRepository.findAll()).thenReturn(accounts);
+        accountService.createAccount(validRequest);
+        accountService.createAccount(new CreateAccountRequest(AccountType.CORRIENTE, new BigDecimal("2000.00")));
 
         // Act
         List<Account> result = accountService.getAllAccounts();
@@ -191,21 +169,16 @@ class AccountServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(accountRepository, times(1)).findAll();
     }
 
     @Test
     void getAllAccounts_EmptyList() {
-        // Arrange
-        when(accountRepository.findAll()).thenReturn(Arrays.asList());
-
         // Act
         List<Account> result = accountService.getAllAccounts();
 
         // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(accountRepository, times(1)).findAll();
     }
 
     // ===== UPDATE ACCOUNT STATUS TESTS =====
@@ -213,42 +186,36 @@ class AccountServiceTest {
     @Test
     void updateAccountStatus_Success() {
         // Arrange
-        Account accountToUpdate = new Account("ACC123456789012345", AccountType.AHORRO, new BigDecimal("1000.00"));
-        accountToUpdate = new Account("ACC123456789012345", AccountType.AHORRO, new BigDecimal("1000.00"));
+        Account savedAccount = accountService.createAccount(validRequest);
         AccountStatus newStatus = AccountStatus.INACTIVO;
 
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(accountToUpdate));
-        when(accountRepository.save(any(Account.class))).thenReturn(accountToUpdate);
-
         // Act
-        Account result = accountService.updateAccountStatus(accountId, newStatus);
+        Account result = accountService.updateAccountStatus(savedAccount.getId(), newStatus);
 
         // Assert
         assertNotNull(result);
         assertEquals(newStatus, result.getStatus());
-        verify(accountRepository, times(1)).findById(accountId);
-        verify(accountRepository, times(1)).save(any(Account.class));
     }
 
     @Test
     void updateAccountStatus_AccountNotFound_ThrowsException() {
         // Arrange
-        when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
+        UUID nonExistentId = UUID.randomUUID();
 
         // Act & Assert
         assertThrows(AccountNotFoundException.class, () -> {
-            accountService.updateAccountStatus(accountId, AccountStatus.INACTIVO);
+            accountService.updateAccountStatus(nonExistentId, AccountStatus.INACTIVO);
         });
-        verify(accountRepository, never()).save(any(Account.class));
     }
 
     @Test
     void updateAccountStatus_WithNullStatus_ThrowsException() {
+        // Arrange
+        Account savedAccount = accountService.createAccount(validRequest);
+
         // Act & Assert
         assertThrows(InvalidAccountException.class, () -> {
-            accountService.updateAccountStatus(accountId, null);
+            accountService.updateAccountStatus(savedAccount.getId(), null);
         });
-        verify(accountRepository, never()).findById(any());
-        verify(accountRepository, never()).save(any(Account.class));
     }
 }

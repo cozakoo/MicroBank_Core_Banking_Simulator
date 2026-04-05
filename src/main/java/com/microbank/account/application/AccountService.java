@@ -3,6 +3,8 @@ package com.microbank.account.application;
 import com.microbank.account.domain.Account;
 import com.microbank.account.domain.AccountRepository;
 import com.microbank.account.domain.AccountStatus;
+import com.microbank.audit.application.AuditService;
+import com.microbank.audit.domain.AuditAction;
 import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InvalidAccountException;
 import org.slf4j.Logger;
@@ -22,6 +24,9 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private AuditService auditService;
 
     /**
      * Crea una nueva cuenta bancaria.
@@ -52,6 +57,11 @@ public class AccountService {
         // Guardar en BD
         Account savedAccount = accountRepository.save(account);
         log.info("Cuenta creada exitosamente. ID: {}, Número: {}", savedAccount.getId(), savedAccount.getAccountNumber());
+
+        // Registrar en auditoría
+        String auditDetails = String.format("Cuenta creada - Tipo: %s, Balance inicial: %s",
+                request.getAccountType(), request.getInitialBalance());
+        auditService.logAction(savedAccount.getId(), AuditAction.CREAR_CUENTA, auditDetails, null);
 
         return savedAccount;
     }

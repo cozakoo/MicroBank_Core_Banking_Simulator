@@ -61,6 +61,7 @@ public class AuditLog {
         this.action = action;
         this.details = details;
         this.userId = userId;
+        this.timestamp = LocalDateTime.now();
     }
 
     // GETTERS Y SETTERS

@@ -10,7 +10,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -173,5 +180,102 @@ class AuditServiceTest {
         assertEquals(account2, result2.getAccountId());
         assertNotEquals(result1.getAccountId(), result2.getAccountId());
         verify(auditLogRepository, times(2)).save(any(AuditLog.class));
+    }
+
+    @Test
+    void getLogsByAccountId_Success() {
+        // Arrange
+        List<AuditLog> logs = new ArrayList<>();
+        AuditLog log1 = new AuditLog(accountId, AuditAction.DEPOSITO, "Deposit 500", userId);
+        AuditLog log2 = new AuditLog(accountId, AuditAction.RETIRO, "Withdrawal 200", userId);
+        logs.add(log1);
+        logs.add(log2);
+
+        when(auditLogRepository.findByAccountIdOrderByTimestampDesc(accountId)).thenReturn(logs);
+
+        // Act
+        List<AuditLog> result = auditService.getLogsByAccountId(accountId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(auditLogRepository).findByAccountIdOrderByTimestampDesc(accountId);
+    }
+
+    @Test
+    void getLogsByAccountId_Empty() {
+        // Arrange
+        UUID nonExistentAccountId = UUID.randomUUID();
+        when(auditLogRepository.findByAccountIdOrderByTimestampDesc(nonExistentAccountId))
+                .thenReturn(new ArrayList<>());
+
+        // Act
+        List<AuditLog> result = auditService.getLogsByAccountId(nonExistentAccountId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(auditLogRepository).findByAccountIdOrderByTimestampDesc(nonExistentAccountId);
+    }
+
+    @Test
+    void getAllLogs_Success() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 20);
+        List<AuditLog> logsList = new ArrayList<>();
+        logsList.add(new AuditLog(accountId, AuditAction.DEPOSITO, "Deposit 500", userId));
+        logsList.add(new AuditLog(accountId, AuditAction.RETIRO, "Withdrawal 200", userId));
+
+        Page<AuditLog> page = new PageImpl<>(logsList, pageable, 2);
+        when(auditLogRepository.findAll(pageable)).thenReturn(page);
+
+        // Act
+        Page<AuditLog> result = auditService.getAllLogs(pageable);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals(0, result.getNumber());
+        assertEquals(20, result.getSize());
+        verify(auditLogRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAllLogs_Empty() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<AuditLog> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        when(auditLogRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        // Act
+        Page<AuditLog> result = auditService.getAllLogs(pageable);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.isEmpty());
+        verify(auditLogRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAllLogs_Pagination() {
+        // Arrange
+        Pageable pageable = PageRequest.of(1, 10);
+        List<AuditLog> logsList = new ArrayList<>();
+        logsList.add(new AuditLog(accountId, AuditAction.DEPOSITO, "Deposit 500", userId));
+
+        Page<AuditLog> page = new PageImpl<>(logsList, pageable, 25);
+        when(auditLogRepository.findAll(pageable)).thenReturn(page);
+
+        // Act
+        Page<AuditLog> result = auditService.getAllLogs(pageable);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getNumber());
+        assertEquals(10, result.getSize());
+        assertEquals(25, result.getTotalElements());
+        assertEquals(3, result.getTotalPages());
+        verify(auditLogRepository).findAll(pageable);
     }
 }

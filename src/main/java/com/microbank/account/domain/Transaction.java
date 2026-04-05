@@ -18,7 +18,7 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(
-    name = "transactions",
+    name = "transacciones",
     indexes = {
         @Index(name = "idx_source", columnList = "sourceAccountId"),
         @Index(name = "idx_target", columnList = "targetAccountId")

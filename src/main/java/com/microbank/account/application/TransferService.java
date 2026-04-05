@@ -119,8 +119,8 @@ public class TransferService {
                     sourceAccount.getId(),
                     targetAccount.getId(),
                     amount,
-                    TransactionType.TRANSFER,
-                    TransactionStatus.COMPLETED,
+                    TransactionType.TRANSFERENCIA,
+                    TransactionStatus.COMPLETADA,
                     "Transferencia completada",
                     LocalDateTime.now()
             );

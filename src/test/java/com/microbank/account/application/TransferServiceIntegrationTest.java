@@ -74,7 +74,7 @@ class TransferServiceIntegrationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETED, result.getStatus());
+        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
         assertEquals(transferAmount, result.getAmount());
 
         // Verificar balances actualizados en BD
@@ -96,7 +96,7 @@ class TransferServiceIntegrationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETED, result.getStatus());
+        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
         assertEquals(transferAmount, result.getAmount());
 
         Account updatedSource = accountRepository.findById(sourceId).orElseThrow();
@@ -114,7 +114,7 @@ class TransferServiceIntegrationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(TransactionStatus.COMPLETED, result.getStatus());
+        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
 
         Account updatedSource = accountRepository.findById(sourceId).orElseThrow();
         assertEquals(0, updatedSource.getBalance().compareTo(BigDecimal.ZERO));
@@ -247,7 +247,7 @@ class TransferServiceIntegrationTest {
         assertEquals(sourceId, result.getSourceAccountId());
         assertEquals(targetId, result.getTargetAccountId());
         assertEquals(transferAmount, result.getAmount());
-        assertEquals(TransactionStatus.COMPLETED, result.getStatus());
+        assertEquals(TransactionStatus.COMPLETADA, result.getStatus());
         assertNotNull(result.getCreatedAt());
 
         // Verificar que la transacción se guardó en BD

@@ -1,11 +1,14 @@
 package com.microbank.shared.api;
 
+import com.microbank.shared.response.ApiResponse;
 import com.microbank.shared.exceptions.AccountLockedException;
 import com.microbank.shared.exceptions.AccountNotFoundException;
 import com.microbank.shared.exceptions.InactiveAccountException;
 import com.microbank.shared.exceptions.InsufficientFundsException;
 import com.microbank.shared.exceptions.InvalidAccountException;
 import com.microbank.shared.exceptions.OperationLimitExceededException;
+import com.microbank.shared.exceptions.InvalidAmountException;
+import com.microbank.shared.exceptions.InvalidEmailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,144 +27,57 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleAccountNotFound(
-            AccountNotFoundException ex,
-            WebRequest request) {
-        log.warn("Cuenta no encontrada: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "NOT_FOUND",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public ResponseEntity<ApiResponse<?>> handleAccountNotFound(AccountNotFoundException ex) {
+        log.warn("Error 404 - Cuenta no encontrada: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
-    @ExceptionHandler(InvalidAccountException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidAccount(
-            InvalidAccountException ex,
-            WebRequest request) {
-        log.warn("Cuenta inválida: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "INVALID_ACCOUNT",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @ExceptionHandler(InsufficientFundsException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientFunds(
-            InsufficientFundsException ex,
-            WebRequest request) {
-        log.warn("Fondos insuficientes: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "INSUFFICIENT_FUNDS",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @ExceptionHandler(InactiveAccountException.class)
-    public ResponseEntity<ErrorResponse> handleInactiveAccount(
-            InactiveAccountException ex,
-            WebRequest request) {
-        log.warn("Cuenta inactiva: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "INACTIVE_ACCOUNT",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    @ExceptionHandler({
+            InvalidAccountException.class,
+            InsufficientFundsException.class,
+            InactiveAccountException.class,
+            InvalidAmountException.class,
+            InvalidEmailException.class
+    })
+    public ResponseEntity<ApiResponse<?>> handleBadRequestExceptions(RuntimeException ex) {
+        log.warn("Error 400 - Solicitud inválida: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(OperationLimitExceededException.class)
-    public ResponseEntity<ErrorResponse> handleOperationLimitExceeded(
-            OperationLimitExceededException ex,
-            WebRequest request) {
-        log.warn("Límite de operación excedido: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "OPERATION_LIMIT_EXCEEDED",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    public ResponseEntity<ApiResponse<?>> handleOperationLimitExceeded(OperationLimitExceededException ex) {
+        log.warn("Error 400 - Límite excedido: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountLocked(
-            AccountLockedException ex,
-            WebRequest request) {
-        log.warn("Cuenta bloqueada: {}", ex.getMessage());
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "ACCOUNT_LOCKED",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    public ResponseEntity<ApiResponse<?>> handleAccountLocked(AccountLockedException ex) {
+        log.warn("Error 409 - Conflicto/Cuenta bloqueada: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex,
-            WebRequest request) {
-        log.warn("Error de validación: {}", ex.getMessage());
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "VALIDATION_ERROR",
-                message,
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        log.warn("Error 400 - Validación fallida: {}", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Errores de validación: " + message));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex,
-            WebRequest request) {
-        log.error("Error interno no manejado", ex);
-
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "INTERNAL_SERVER_ERROR",
-                "Ocurrió un error interno en el servidor",
-                request.getDescription(false).replace("uri=", "")
-        );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
+        log.error("Error 500 - Error interno no manejado", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Ocurrió un error inesperado en el simulador."));
     }
 }

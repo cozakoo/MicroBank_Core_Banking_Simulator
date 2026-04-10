@@ -463,7 +463,7 @@ docker-compose ps
 - [ ] REQ-020: Documentación de Decisiones Arquitectónicas (ADR)
 - [ ] REQ-021: InputValidator
 - [ ] REQ-022: Response Wrapper
-- [ ] REQ-023: Flyway Migrations (Opcional)
+- [x] REQ-023: Flyway Migrations (Opcional)
 - [ ] REQ-024: Spring Security (Autenticación Base)
 - [ ] REQ-025: Dashboard Admin (Opcional)
 

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>MicroBank</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="navbar-wrapper mb-4">
+        <nav class="navbar navbar-dark bg-navy">
+            <div class="container-fluid px-5">
+                <span class="navbar-brand mb-0 h1">
+                    <span class="bank-icon">🏦</span> MicroBank Admin
+                </span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="current-date" id="currentDate"></span>
+                    <span class="badge bg-secondary text-navy">Administrador</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="dashboard-container">
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Cuentas totales</span>
+                            <span class="stat-value" id="totalAccountsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Activas</span>
+                            <span class="stat-value" id="activeAccountsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Suspendidas</span>
+                            <span class="stat-value" id="suspendedAccountsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls Section -->
+        <section class="controls-section mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="search-wrapper">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control search-input"
+                            placeholder="Buscar por numero de cuenta..."
+                            aria-label="Search accounts"
+                        >
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-primary btn-create" id="createAccountBtn">
+                        <span class="btn-icon">➕</span> Crear cuenta
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accounts Table Section -->
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table class="table table-accounts" id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th>N° Cuenta</th>
+                            <th>Tipo</th>
+                            <th>Saldo</th>
+                            <th>Estado</th>
+                            <th>Creada</th>
+                            <th class="actions-col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsTableBody">
+                        <tr class="loading-row">
+                            <td colspan="6" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- No Results Message -->
+        <section id="noResultsSection" class="no-results-section" style="display: none;">
+            <div class="text-center py-5">
+                <span class="no-results-icon">🔍</span>
+                <p class="no-results-text">No se encontraron cuentas que coincidan con su búsqueda.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-4">
+    </div>
+
+    <!-- Crear Cuenta Modal -->
+    <div class="modal fade" id="createAccountModal" tabindex="-1" aria-labelledby="createAccountLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="createAccountLabel">Crear Nueva Cuenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAccountForm" novalidate>
+                        <div class="mb-3">
+                            <label for="accountType" class="form-label">Tipo de Cuenta</label>
+                            <select class="form-select" id="accountType" name="accountType" required>
+                                <option value="">-- Seleccionar Tipo --</option>
+                                <option value="CORRIENTE">Corriente</option>
+                                <option value="AHORRO">Ahorro</option>
+                                <option value="CREDITO">Crédito</option>
+                            </select>
+                            <small class="form-text text-danger" style="display: none;" id="typeError"></small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="initialBalance" class="form-label">Saldo Inicial</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="initialBalance"
+                                    name="initialBalance"
+                                    placeholder="0.01"
+                                    step="0.01"
+                                    min="0.01"
+                                    required
+                                >
+                            </div>
+                            <small class="form-text text-muted">Debe ser mayor que cero</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitCreateBtn">Crear Cuenta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Transactions Modal -->
+    <div class="modal fade" id="transactionsModal" tabindex="-1" aria-labelledby="transactionsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title" id="transactionsLabel">Transacciones de la Cuenta</h5>
+                        <small class="text-muted" id="transactionsAccountInfo"></small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="transactionsLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <table class="table table-transactions" id="transactionsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                        </tbody>
+                    </table>
+                    <div id="noTransactionsMessage" class="text-center py-4" style="display: none;">
+                        <p class="text-muted">No se encontraron transacciones para esta cuenta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actualizar Estado Modal -->
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="updateStatusLabel">Actualizar Estado de la Cuenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="statusAccountInfo" class="mb-4"></p>
+
+                    <div class="mb-4">
+                        <label for="newStatus" class="form-label">Nuevo Estado</label>
+                        <select class="form-select form-select-lg" id="newStatus" required>
+                            <option value="">-- Seleccionar Estado --</option>
+                            <option value="ACTIVO">Activo</option>
+                            <option value="INACTIVO">Inactivo</option>
+                            <option value="SUSPENDIDO">Suspendido</option>
+                            <option value="CERRADO">Cerrado</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert" id="statusWarning" style="display: none;">
+                        <strong>⚠️ Advertencia:</strong> <span id="warningText"></span>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitStatusBtn">Actualizar Estado</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="depositLabel">💰 Depositar Fondos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="depositAccountInfo" class="text-muted mb-4"></p>
+                    <div class="mb-4">
+                        <label for="depositAmount" class="form-label">Monto</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="depositAmount"
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="submitDepositBtn">Confirmar Depósito</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="withdrawLabel">💸 Retirar Fondos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="withdrawAccountInfo" class="text-muted mb-4"></p>
+                    <div class="mb-4">
+                        <label for="withdrawAmount" class="form-label">Monto</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="withdrawAmount"
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" id="submitWithdrawBtn">Confirmar Retiro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="transferLabel">🔄 Transferir Fondos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Desde Cuenta</label>
+                        <p id="transferSourceInfo" class="fw-semibold text-primary mb-0"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transferTargetSelect" class="form-label">Hacia Cuenta</label>
+                        <select class="form-select" id="transferTargetSelect" required>
+                            <option value="">-- Seleccionar cuenta de destino --</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="transferAmount" class="form-label">Monto</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="transferAmount"
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitTransferBtn">Confirmar Transferencia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container-fluid px-5">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span>🏦 MicroBank Core Banking Simulator</span>
+                    <span class="footer-version">v0.4.0</span>
+                </div>
+                <div class="footer-devs">
+                    <span class="footer-label">Desarrollado por</span>
+                    <a href="https://github.com/cozakoo" target="_blank" class="footer-dev-link">
+                        <span class="dev-avatar">MA</span>
+                        <span>Martín Arcos Vargas</span>
+                    </a>
+                    <span class="footer-separator">·</span>
+                    <a href="https://github.com/Lkss01" target="_blank" class="footer-dev-link">
+                        <span class="dev-avatar">LS</span>
+                        <span>Lucas</span>
+                    </a>
+                </div>
+                <div class="footer-stack">
+                    <span class="stack-badge">Java 17</span>
+                    <span class="stack-badge">Spring Boot 3.2</span>
+                    <span class="stack-badge">PostgreSQL 15</span>
+                    <span class="stack-badge">DDD</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

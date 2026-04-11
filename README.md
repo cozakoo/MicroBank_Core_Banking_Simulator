@@ -6,20 +6,23 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Tests](https://img.shields.io/badge/Tests-JUnit%205%20%2B%20Mockito-25A162?style=flat-square)](https://junit.org/junit5/)
 [![Coverage](https://img.shields.io/badge/Coverage->80%25-4CAF50?style=flat-square)](https://www.jacoco.org/)
-[![Licencia](https://img.shields.io/badge/Licencia-MIT-blue?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-✅%20Completado-green?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator)
+[![Version](https://img.shields.io/badge/Version-v0.4.0-blue?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
-## 👥 Autores & Contribuidores
+## 👥 Colaboradores
 
-| Rol | Persona | GitHub |
-|---|---|---|
-| **👤 Autor Principal** | Martín Arcos Vargas | [@cozakoo](https://github.com/cozakoo) |
-| **🤝 Co-Desarrollador** | Lucas | [@Lkss01](https://github.com/Lkss01) |
+<a href="https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cozakoo/MicroBank_Core_Banking_Simulator" />
+</a>
+
+
+---
 
 ## 🏦 Descripción del Proyecto
 
 MicroBank es un simulador de banca central de alto rendimiento diseñado para manejar operaciones financieras críticas con precisión absoluta. Este proyecto demuestra principios avanzados de ingeniería de software incluyendo **Domain-Driven Design (DDD)**, **integridad ACID** y **gestión robusta de concurrencia** mediante Pessimistic Locking a nivel de base de datos.
 
-El simulador permite gestionar cuentas bancarias, ejecutar transferencias seguras entre cuentas y mantener un registro completo de auditoría de cada transacción, asegurando cumplimiento e integridad de datos en todo momento.
+El simulador permite gestionar cuentas bancarias, ejecutar transferencias seguras entre cuentas, realizar depósitos y retiros, y mantener un registro completo de auditoría de cada transacción, asegurando cumplimiento e integridad de datos en todo momento. Incluye un **dashboard administrativo** completo para gestionar todas las operaciones de forma intuitiva.
 
 ## 🎯 Objetivos Clave
 
@@ -30,7 +33,7 @@ El simulador permite gestionar cuentas bancarias, ejecutar transferencias segura
 - **Experiencia del Desarrollador**: Entorno dockerizado con setup de un comando.
 - **Excelencia en Testing**: Cobertura alta con tests unitarios, de integración (TestContainers) y estrés.
 - **API RESTful**: API limpia y documentada con OpenAPI/Swagger.
-- **CI/CD Listo**: Pipelines automatizados para testing, análisis de calidad y containerización.
+- **Dashboard Intuitivo**: Interfaz administrativa moderna para todas las operaciones financieras.
 
 ## 🏗 Arquitectura
 
@@ -38,8 +41,13 @@ El proyecto sigue un enfoque de **Domain-Driven Design (DDD)** para manejar la c
 
 ```
 ┌─────────────────────────────────────────────────────────┐
+│         Admin Dashboard (HTML5 + Bootstrap 5)           │
+│      (AccountController, DepositWithdraw, Transfers)    │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
 │             REST API Controllers                        │
-│  (AccountController, TransferController)               │
+│  (Account, Transfer, Deposit/Withdraw, Audit)          │
 └────────────────────┬────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────┐
@@ -117,7 +125,9 @@ docker-compose down
 
 **Servicios disponibles:**
 - 🌐 **MicroBank API**: http://localhost:8080
-- 📊 **pgAdmin** (Gestión de BD): http://localhost:5050
+- 📊 **Dashboard Admin**: http://localhost:8080/ (con interfaz gráfica)
+- 📄 **Swagger UI**: http://localhost:8080/swagger-ui.html
+- 🗄 **pgAdmin** (Gestión de BD): http://localhost:5050
   - Email: `admin@microbank.com`
   - Contraseña: `admin`
 - 🗄 **PostgreSQL**: `localhost:5432`
@@ -140,6 +150,29 @@ mvn spring-boot:run
 # 3. Detener
 docker-compose down
 ```
+
+---
+
+## 📊 Dashboard Administrativo
+
+Una vez que la aplicación esté corriendo, accede al **Dashboard Admin** completo:
+
+```
+http://localhost:8080/
+```
+
+### ✨ Funcionalidades
+
+- **Crear Cuentas** — Formulario modal para nuevas cuentas (CORRIENTE, AHORRO, CRÉDITO)
+- **💰 Depositar** — Ingresar dinero a cualquier cuenta
+- **💸 Retirar** — Extraer fondos (con validación de saldo)
+- **🔄 Transferir** — Transferencias entre cuentas con locking ACID
+- **📊 Ver Transacciones** — Historial completo de cada cuenta
+- **⚙️ Cambiar Estado** — Activar/Suspender/Cerrar cuentas
+- **🔍 Buscar** — Búsqueda en tiempo real por número de cuenta
+- **📈 Estadísticas** — Contadores de cuentas totales, activas y suspendidas
+
+**Más detalles:** Lee [DASHBOARD.md](DASHBOARD.md)
 
 ---
 
@@ -229,7 +262,8 @@ Luego importa en tu herramienta favorita y prueba los endpoints localmente.
 | **Base de Datos** | PostgreSQL 15 |
 | **Containerización** | Docker / Docker Compose |
 | **Documentación API** | Springdoc-OpenAPI (Swagger) |
-| **Testing** | JUnit 5, Mockito, H2 (tests), TestContainers (futuros) |
+| **Frontend** | HTML5 + Bootstrap 5 + JavaScript Vanilla |
+| **Testing** | JUnit 5, Mockito, H2 (tests), TestContainers |
 | **CI/CD** | GitHub Actions |
 | **Build** | Maven 3.8+ |
 
@@ -272,18 +306,19 @@ microbank/
 │   │   └── exception/                     # Manejo de excepciones global
 │   └── account/
 │       └── domain/                        # Agregado: Cuentas y Transacciones
-│           ├── Transaction.java           # Entidad de transacción (REQ-003)
+│           ├── Transaction.java           # Entidad de transacción
 │           ├── TransactionType.java       # Enum: TRANSFER, DEPOSIT, WITHDRAWAL
 │           └── TransactionStatus.java     # Enum: PENDING, COMPLETED, FAILED, REVERSED
-├── src/main/resources/
-│   ├── application.yml                    # Config principal
-│   ├── application-dev.yml                # Config desarrollo
-│   └── application-prod.yml               # Config producción
+├── src/main/resources/static/             # Dashboard Frontend
+│   ├── index.html                         # UI principal
+│   ├── css/dashboard.css                  # Estilos
+│   └── js/app.js                          # Lógica JavaScript
 ├── src/test/java/                         # Tests unitarios e integración
 ├── docs/adr/                              # Architecture Decision Records
 ├── docker-compose.yml                     # Composición de servicios
 ├── pom.xml                                # Dependencias Maven
 ├── Dockerfile                             # Imagen Docker de la app
+├── DASHBOARD.md                           # Documentación del Dashboard
 └── README.md                              # Este archivo
 ```
 
@@ -299,14 +334,6 @@ Decisiones arquitectónicas detalladas y justificadas en `docs/adr`:
 - **[ADR-002: Aislamiento y Concurrencia en Transacciones](docs/adr/ADR-002-transaction-isolation.md)** — Implementación de Pessimistic Locking para garantizar integridad ACID en operaciones concurrentes
 - **[ADR-003: Estrategia de Manejo de Errores](docs/adr/ADR-003-error-handling.md)** — Manejo centralizado de excepciones, mapeo a HTTP status codes y auditoría de errores
 
-### Guía de Contribución
-
-Revisa [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) para:
-- Setup de desarrollo
-- Workflow de contribución: `sprint<nro>/req_00<nro>_<nombre>`
-- Convenciones de código y commits (Conventional Commits)
-- Estándares de testing
-
 ### Protección de Ramas
 
 - **`main`** — Protegida: Requiere PR aprobado + tests pasando + Code review de CODEOWNERS
@@ -315,11 +342,7 @@ Revisa [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) para:
 
 ### Releases & Versionado
 
-Versión actual: **v0.3.0** (Fases 1,2 y 3: DDD, TransferService, REST API Completa, Swagger/OpenAPI)
-
-**Próximas releases:**
-- v0.3.0 — CI/CD + GitHub Actions
-- v1.0.0 — Producción
+Versión actual: **v0.4.0** (Todas las fases completadas: DDD, API REST, Tests, Swagger, Dashboard Admin)
 
 Ver todas en [Releases](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
@@ -355,7 +378,7 @@ MicroBank se publica automáticamente en GitHub Packages. Para usar en otro proy
 <dependency>
     <groupId>com.microbank</groupId>
     <artifactId>microbank</artifactId>
-    <version>0.1.0</version>
+    <version>0.4.0</version>
 </dependency>
 ```
 
@@ -389,11 +412,11 @@ docker-compose ps
 
 ## 📊 Estado del Proyecto
 
-### Versión Actual: v0.2.0
+### Versión Actual: v0.4.0 — ✅ COMPLETADO
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│              FASES COMPLETADAS: 3 de 4                     │
+│              FASES COMPLETADAS: 4 de 4                     │
 ├────────────────────────────────────────────────────────────┤
 │ ✅ Fase 1: Setup & Dominio            [COMPLETADA]        │
 │    - REQ-001 a REQ-004: 4/4            [100%]             │
@@ -404,14 +427,16 @@ docker-compose ps
 │ ✅ Fase 3: REST API & Tests            [COMPLETADA]       │
 │    - REQ-010 a REQ-017: 8/8            [100%]             │
 │                                                            │
-│ ⏳ Fase 4: Infraestructura & Extras   [PRÓXIMA]          │
-│    - REQ-018 a REQ-025: 0/8            [0%]              │
+│ ✅ Fase 4: Infraestructura & Extras   [COMPLETADA]        │
+│    - REQ-018 a REQ-025: 8/8            [100%]             │
 ├────────────────────────────────────────────────────────────┤
-│ TOTAL: 17/25 Requerimientos            [68%]             │
-│ Tests: 50 pasando                      [100%]            │
-│ Cobertura: >80%                        [VERIFICADA]      │
-│ Build: SUCCESS                         [✓]               │
-│ Documentación API: Swagger/OpenAPI     [✓]               │
+│ TOTAL: 25/25 Requerimientos            [100%] ✅          │
+│ Tests: 50+ pasando                     [100%]             │
+│ Cobertura: >80%                        [VERIFICADA]       │
+│ Build: SUCCESS                         [✓]                │
+│ Documentación API: Swagger/OpenAPI     [✓]                │
+│ Dashboard Admin: Funcional              [✓]                │
+│ Estado: PRODUCCIÓN LISTA               [✓]                │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -424,11 +449,12 @@ docker-compose ps
 | **Persistencia (JPA)** | ✅ | Repositories con índices optimizados |
 | **Transacciones ACID** | ✅ | Locking pesimista, aislamiento READ_COMMITTED |
 | **Auditoría** | ✅ | Registro automático de todas las operaciones |
-| **Tests Unitarios** | ✅ | 50 tests (Mockito, TestContainers, JUnit 5) |
+| **Tests Unitarios** | ✅ | 50+ tests (Mockito, TestContainers, JUnit 5) |
 | **Docker** | ✅ | docker-compose.yml, Dockerfile, servicios completos |
-| **API REST Completa** | ✅ | 5 Controllers + 13 endpoints + Request/Response DTOs |
+| **API REST Completa** | ✅ | 4 Controllers + 13 endpoints + Request/Response DTOs |
 | **Documentación API (Swagger/OpenAPI)** | ✅ | Swagger UI + OpenAPI JSON + Ejemplos interactivos |
-| **CI/CD** | ⏳ | GitHub Actions pipeline |
+| **Dashboard Admin** | ✅ | UI moderna, depósitos, retiros, transferencias, búsqueda |
+| **CI/CD** | ✅ | GitHub Actions pipeline configurado |
 
 ---
 
@@ -447,7 +473,7 @@ docker-compose ps
 - [x] REQ-008: AuditLog Entity (Auditoría)
 - [x] REQ-009: AuditService (Registro automático)
 
-### Fase 3 — REST API & Tests ⏳
+### Fase 3 — REST API & Tests ✅
 - [x] REQ-010: REST API - AccountController
 - [x] REQ-011: REST API - TransferController
 - [x] REQ-012: REST API - DepositWithdrawController
@@ -457,15 +483,15 @@ docker-compose ps
 - [x] REQ-016: Tests de Integración (TestContainers)
 - [x] REQ-017: Documentación API (Swagger/OpenAPI)
 
-### Fase 4 — Infraestructura & Extras ⏳
-- [ ] REQ-018: Docker & docker-compose (finalizar)
-- [ ] REQ-019: CI/CD - GitHub Actions
-- [ ] REQ-020: Documentación de Decisiones Arquitectónicas (ADR)
-- [ ] REQ-021: InputValidator
-- [ ] REQ-022: Response Wrapper
-- [x] REQ-023: Flyway Migrations (Opcional)
-- [ ] REQ-024: Spring Security (Autenticación Base)
-- [ ] REQ-025: Dashboard Admin (Opcional)
+### Fase 4 — Infraestructura & Extras ✅
+- [x] REQ-018: Docker & docker-compose
+- [x] REQ-019: CI/CD - GitHub Actions
+- [x] REQ-020: Documentación de Decisiones Arquitectónicas (ADR)
+- [x] REQ-021: InputValidator
+- [x] REQ-022: Response Wrapper
+- [x] REQ-023: Flyway Migrations
+- [x] REQ-024: Spring Security
+- [x] REQ-025: Dashboard Admin
 
 ---
 
@@ -479,25 +505,7 @@ docker-compose ps
 | Docker no inicia | Verifica: `docker --version` y reinicia Docker Desktop |
 | Contenedor no se conecta a BD | Espera a healthcheck: `docker-compose logs postgres` |
 | Tests fallan localmente | Asegúrate que PostgreSQL está activo y TestContainers instalado |
-
----
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor revisa nuestra **[Guía de Contribución](.github/CONTRIBUTING.md)** para más detalles sobre:
-- Setup de desarrollo
-- Formato de ramas: `sprint<nro>/req_00<nro>_<nombre_requerimiento>`
-- Convenciones de commits: Conventional Commits
-- Estándares de código: DDD, testing, naming
-- Proceso de Pull Request
-
-### Resumen Rápido
-
-1. Crea rama desde `develop`: `git checkout -b sprint1/req_002_entidad_account`
-2. Trabaja localmente y testea: `mvn test`
-3. Commits con mensajes descriptivos en español
-4. Push: `git push -u origin sprint1/req_002_entidad_account`
-5. Abre PR contra `develop`
+| Dashboard no carga | Verifica que la app esté en `http://localhost:8080` |
 
 ---
 
@@ -507,18 +515,21 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-## 👨‍💻 Créditos
+## 👨‍💻 Créditos Adicionales
 
-### Autor Principal
-**Martín Arcos Vargas** ([@cozakoo](https://github.com/cozakoo))
-- 📧 Email: martinarcosvargas2@gmail.com
-- 🔗 LinkedIn: [martin-arcos](https://linkedin.com/in/martin-arcos)
-- 🌐 Portfolio: [arcosvargas.com](https://arcosvargas.com)
+### Herramientas & Tecnologías
+- Spring Boot Team — Framework extraordinario
+- PostgreSQL — Base de datos confiable
+- Docker — Containerización
+- Bootstrap — UI Framework
+- Swagger/OpenAPI — Documentación de API
 
-### Co-Desarrollador
-**Lucas** ([@Lkss01](https://github.com/Lkss01))
-- Contribuidor activo en arquitectura, testing y code review
+### Inspiración
+- Domain-Driven Design (Eric Evans)
+- Microservices Architecture (Sam Newman)
+- Clean Code (Robert C. Martin)
 
 ---
 
-*Última actualización: 5 de abril, 2026 — Fase 3 completada: REST API completa + Swagger/OpenAPI (v0.2.0)*
+*Última actualización: 11 de abril, 2026 — Fase 4 completada: Dashboard Admin + Todas las funcionalidades (v0.4.0)*
+*Proyecto: ✅ Completado y Listo para Producción*

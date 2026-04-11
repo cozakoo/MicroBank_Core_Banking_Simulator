@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.microbank.auth.domain.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,9 @@ public class AccountService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * Crea una nueva cuenta bancaria.
      * Genera automáticamente un número de cuenta único.
@@ -36,22 +40,20 @@ public class AccountService {
      * @throws InvalidAccountException si el balance es inválido
      */
     @Transactional
-    public Account createAccount(CreateAccountRequest request) {
-        log.info("Creando nueva cuenta de tipo: {}", request.getAccountType());
+    public Account createAccount(CreateAccountRequest request, UUID ownerId) {
+        log.info("Creando nueva cuenta de tipo: {} para owner: {}", request.getAccountType(), ownerId);
 
-        // Validar que el balance sea válido
         if (request.getInitialBalance() == null || request.getInitialBalance().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAccountException("El balance inicial debe ser mayor a cero");
         }
 
-        // Generar número de cuenta único
         String accountNumber = generateUniqueAccountNumber();
 
-        // Crear la entidad Account
         Account account = new Account(
                 accountNumber,
                 request.getAccountType(),
-                request.getInitialBalance()
+                request.getInitialBalance(),
+                ownerId
         );
 
         // Guardar en BD
@@ -101,13 +103,24 @@ public class AccountService {
     }
 
     /**
-     * Obtiene todas las cuentas.
-     * @return Lista de todas las cuentas
+     * Obtiene todas las cuentas (solo admin).
      */
     @Transactional(readOnly = true)
     public List<Account> getAllAccounts() {
         log.debug("Obteniendo todas las cuentas");
         return accountRepository.findAll();
+    }
+
+    /**
+     * Obtiene las cuentas del usuario autenticado.
+     */
+    @Transactional(readOnly = true)
+    public List<Account> getAccountsByOwner(String username) {
+        UUID ownerId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new InvalidAccountException("Usuario no encontrado: " + username))
+                .getId();
+        log.debug("Obteniendo cuentas del usuario: {}", username);
+        return accountRepository.findByOwnerId(ownerId);
     }
 
     /**
@@ -132,6 +145,36 @@ public class AccountService {
 
         log.info("Estado de cuenta actualizado. ID: {}, Nuevo estado: {}", id, newStatus);
         return updated;
+    }
+
+    /**
+     * Asigna o actualiza el alias de una cuenta.
+     * El alias debe ser único entre todas las cuentas.
+     */
+    @Transactional
+    public Account setAlias(UUID accountId, String alias) {
+        if (accountRepository.existsByAlias(alias)) {
+            Account existing = accountRepository.findByAlias(alias).get();
+            if (!existing.getId().equals(accountId)) {
+                throw new InvalidAccountException("El alias '" + alias + "' ya está en uso por otra cuenta");
+            }
+        }
+        Account account = getAccountById(accountId);
+        account.setAlias(alias);
+        return accountRepository.save(account);
+    }
+
+    /**
+     * Busca una cuenta por número de cuenta o alias.
+     * Útil para transferencias sin conocer el UUID.
+     */
+    @Transactional(readOnly = true)
+    public Account getAccountByNumberOrAlias(String identifier) {
+        // Intentar por número de cuenta primero
+        return accountRepository.findByAccountNumber(identifier)
+                .or(() -> accountRepository.findByAlias(identifier))
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Cuenta no encontrada con número o alias: " + identifier));
     }
 
     /**

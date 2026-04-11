@@ -64,8 +64,20 @@ public class TransferService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Transaction transferFunds(TransferRequest request) {
         UUID sourceId = request.getSourceAccountId();
-        UUID targetId = request.getTargetAccountId();
         BigDecimal amount = request.getAmount();
+
+        // Resolver cuenta destino: acepta UUID, número de cuenta o alias
+        UUID targetId = request.getTargetAccountId();
+        if (targetId == null) {
+            String identifier = request.getTargetIdentifier();
+            if (identifier == null || identifier.isBlank()) {
+                throw new InvalidAccountException("Se requiere targetAccountId o targetIdentifier para la transferencia");
+            }
+            Account target = accountRepository.findByAccountNumber(identifier)
+                    .or(() -> accountRepository.findByAlias(identifier))
+                    .orElseThrow(() -> new AccountNotFoundException("Cuenta destino no encontrada: " + identifier));
+            targetId = target.getId();
+        }
 
         log.info("Iniciando transferencia: {} -> {} amount {}", sourceId, targetId, amount);
 

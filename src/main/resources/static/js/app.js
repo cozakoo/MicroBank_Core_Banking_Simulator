@@ -4,6 +4,32 @@
 
 const API_BASE_URL = '/api/v1';
 
+// ============================================
+// AUTH — verificar token al cargar
+// ============================================
+const token = localStorage.getItem('mb_token');
+const currentUsername = localStorage.getItem('mb_username');
+
+if (!token) {
+    window.location.href = '/login.html';
+}
+
+// Headers con JWT para todas las requests autenticadas
+function authHeaders(extra = {}) {
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...extra
+    };
+}
+
+function logout() {
+    localStorage.removeItem('mb_token');
+    localStorage.removeItem('mb_username');
+    localStorage.removeItem('mb_userId');
+    window.location.href = '/login.html';
+}
+
 // State
 let allAccounts = [];
 let currentAccount = null;
@@ -37,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setCurrentDate();
     loadAccounts();
     attachEventListeners();
+    // Mostrar usuario autenticado en el navbar
+    const userEl = document.getElementById('currentUser');
+    if (userEl && currentUsername) userEl.textContent = currentUsername;
 });
 
 function setCurrentDate() {
@@ -72,9 +101,14 @@ function attachEventListeners() {
 async function loadAccounts() {
     try {
         showTableLoading();
-        const response = await fetch(`${API_BASE_URL}/accounts`);
+        const response = await fetch(`${API_BASE_URL}/accounts`, {
+            headers: authHeaders()
+        });
 
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) logout();
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
 
         const data = await response.json();
         allAccounts = data.data || [];
@@ -147,10 +181,13 @@ function createAccountRow(account) {
     const status = account.status || 'N/A';
     const createdAt = formatDate(account.createdAt);
     const statusBadgeClass = getStatusBadgeClass(status);
+    const aliasDisplay = account.alias
+        ? `<br><small class="text-muted">@${escapeHtml(account.alias)}</small>`
+        : `<br><small class="text-muted opacity-50" style="cursor:pointer" onclick="promptSetAlias('${account.id}')">+ alias</small>`;
 
     return `
         <tr>
-            <td class="account-number">${escapeHtml(accountNumber)}</td>
+            <td class="account-number">${escapeHtml(accountNumber)}${aliasDisplay}</td>
             <td>${escapeHtml(accountType)}</td>
             <td class="account-balance">${balance}</td>
             <td><span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span></td>
@@ -166,6 +203,24 @@ function createAccountRow(account) {
             </td>
         </tr>
     `;
+}
+
+async function promptSetAlias(accountId) {
+    const alias = prompt('Ingresá un alias para esta cuenta\n(solo minúsculas, números y guiones, ej: mi-ahorro):');
+    if (!alias) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/accounts/${accountId}/alias`, {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({ alias: alias.toLowerCase().trim() })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al asignar alias');
+        showToast(`Alias "@${alias}" asignado correctamente`, 'success');
+        loadAccounts();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 }
 
 // ============================================
@@ -192,7 +247,7 @@ async function handleCreateAccount() {
     try {
         const response = await fetch(`${API_BASE_URL}/accounts`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ accountType, initialBalance })
         });
 
@@ -263,7 +318,7 @@ async function handleDeposit() {
     try {
         const response = await fetch(`${API_BASE_URL}/accounts/${operationAccountId}/deposit`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ accountId: operationAccountId, amount })
         });
 
@@ -313,7 +368,7 @@ async function handleWithdraw() {
     try {
         const response = await fetch(`${API_BASE_URL}/accounts/${operationAccountId}/withdraw`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ accountId: operationAccountId, amount })
         });
 
@@ -347,37 +402,59 @@ async function handleWithdraw() {
 // Si una transferencia falla (409 Conflict = lock timeout), el usuario ve error claro.
 // El backend NUNCA deja datos corruptos, gracias a @Transactional.
 
+function switchTransferTab(tab, event) {
+    document.getElementById('transferTabSelect').style.display = tab === 'select' ? 'block' : 'none';
+    document.getElementById('transferTabManual').style.display = tab === 'manual' ? 'block' : 'none';
+    document.querySelectorAll('#transferTargetTabs .nav-link').forEach(el => el.classList.remove('active'));
+    if (event) event.target.classList.add('active');
+}
+
 function prepareTransfer(sourceAccountId) {
     const sourceAccount = allAccounts.find(a => a.id === sourceAccountId);
     if (!sourceAccount) { showToast('Cuenta no encontrada', 'error'); return; }
 
     operationAccountId = sourceAccountId;
 
+    const aliasLabel = sourceAccount.alias ? ` (@${sourceAccount.alias})` : '';
     document.getElementById('transferSourceInfo').textContent =
-        `${sourceAccount.accountNumber} — ${formatCurrency(sourceAccount.balance)}`;
+        `${sourceAccount.accountNumber}${aliasLabel} — ${formatCurrency(sourceAccount.balance)}`;
 
     const targetSelect = document.getElementById('transferTargetSelect');
-    targetSelect.innerHTML = '<option value="">-- Select destination account --</option>';
+    targetSelect.innerHTML = '<option value="">-- Seleccionar cuenta de destino --</option>';
 
+    // Mostrar mis cuentas ACTIVO (excluyendo la origen)
     allAccounts
         .filter(a => a.id !== sourceAccountId && a.status === 'ACTIVO')
         .forEach(a => {
             const option = document.createElement('option');
             option.value = a.id;
-            option.textContent = `${a.accountNumber} (${a.accountType}) — ${formatCurrency(a.balance)}`;
+            const alias = a.alias ? ` @${a.alias}` : '';
+            option.textContent = `${a.accountNumber}${alias} (${a.accountType}) — ${formatCurrency(a.balance)}`;
             targetSelect.appendChild(option);
         });
 
     document.getElementById('transferAmount').value = '';
+    document.getElementById('transferTargetIdentifier').value = '';
+    switchTransferTab('select', null);
+    document.querySelectorAll('#transferTargetTabs .nav-link')[0].classList.add('active');
+    document.querySelectorAll('#transferTargetTabs .nav-link')[1].classList.remove('active');
     transferModal.show();
 }
 
 async function handleTransfer() {
-    const targetAccountId = document.getElementById('transferTargetSelect').value;
     const amount = parseFloat(document.getElementById('transferAmount').value);
 
-    if (!targetAccountId) {
+    // Determinar destino: tab select o tab manual
+    const manualVisible = document.getElementById('transferTabManual').style.display !== 'none';
+    const targetAccountId = manualVisible ? null : document.getElementById('transferTargetSelect').value;
+    const targetIdentifier = manualVisible ? document.getElementById('transferTargetIdentifier').value.trim() : null;
+
+    if (!manualVisible && !targetAccountId) {
         showToast('Por favor seleccione una cuenta de destino.', 'warning');
+        return;
+    }
+    if (manualVisible && !targetIdentifier) {
+        showToast('Ingrese un número de cuenta o alias.', 'warning');
         return;
     }
 
@@ -389,22 +466,15 @@ async function handleTransfer() {
     submitTransferBtn.disabled = true;
     submitTransferBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
 
+    const body = { sourceAccountId: operationAccountId, amount };
+    if (targetAccountId) body.targetAccountId = targetAccountId;
+    if (targetIdentifier) body.targetIdentifier = targetIdentifier;
+
     try {
-        // ENVIAR al backend con ambas cuentas (source y target)
-        // El backend se encargará del locking pesimista en orden UUID
-        // Posibles respuestas:
-        // - 201 CREATED: Transferencia OK
-        // - 400 BAD_REQUEST: Validación fallida (monto 0, cuenta no existe, balance insuficiente)
-        // - 404 NOT_FOUND: Una de las cuentas fue eliminada (race condition rara)
-        // - 409 CONFLICT: Lock timeout (otra transferencia occupaba el lock 30s+)
         const response = await fetch(`${API_BASE_URL}/transfers`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sourceAccountId: operationAccountId,
-                targetAccountId,
-                amount
-            })
+            headers: authHeaders(),
+            body: JSON.stringify(body)
         });
 
         if (!response.ok) {
@@ -442,7 +512,9 @@ async function loadTransactions(accountId) {
     transactionsModal.show();
 
     try {
-        const response = await fetch(`${API_BASE_URL}/transfers/account/${accountId}`);
+        const response = await fetch(`${API_BASE_URL}/transfers/account/${accountId}`, {
+            headers: authHeaders()
+        });
 
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
@@ -543,7 +615,7 @@ async function handleUpdateStatus() {
     try {
         const response = await fetch(`${API_BASE_URL}/accounts/${operationAccountId}/status`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ newStatus: newStatusSelect.value })
         });
 

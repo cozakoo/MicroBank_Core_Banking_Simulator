@@ -29,6 +29,10 @@ springdoc:
     path: /v3/api-docs
   show-actuator: false
 
+jwt:
+  secret: bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0
+  expiration: 86400000
+
 logging:
   level:
     org.hibernate.SQL: DEBUG

@@ -1,17 +1,31 @@
 package com.microbank.config;
 
+import com.microbank.auth.application.CustomUserDetailsService;
+import com.microbank.auth.application.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -19,26 +33,41 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Dashboard y archivos estáticos sin autenticación (Desarrollo)
-                        .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**").permitAll()
+                        // Dashboard, login y archivos estáticos
+                        .requestMatchers("/", "/index.html", "/login.html", "/static/**", "/css/**", "/js/**").permitAll()
 
-                        // Swagger sin autenticación
+                        // Swagger y health
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/v1/health").permitAll()
+
+                        // Auth: login y registro son públicos
+                        .requestMatchers("/api/v1/auth/**").permitAll()
 
                         // Admin requiere ADMIN
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                        // APIs sin autenticación (Desarrollo - comentar en Producción)
-                        .requestMatchers("/api/v1/accounts/**", "/api/v1/transfers/**", "/api/v1/deposits/**", "/api/v1/withdrawals/**").permitAll()
-
-                        // Todo lo demás requiere autenticación
+                        // Todo lo demás requiere JWT
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

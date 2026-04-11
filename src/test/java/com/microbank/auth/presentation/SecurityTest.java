@@ -20,11 +20,19 @@ public class SecurityTest {
     private MockMvc mockMvc;
 
     @Test
-    void whenUnauthenticated_thenAccountsIsPublic() throws Exception {
-        // En desarrollo, los endpoints de cuentas son públicos (sin autenticación requerida)
-        // En producción, cambiar SecurityConfig para requerir autenticación
+    void whenUnauthenticated_thenAccountsIsForbidden() throws Exception {
+        // Sin JWT, los endpoints de cuentas deben requerir autenticación
         mockMvc.perform(get("/api/v1/accounts"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void authEndpoints_shouldNotRequireAuthentication() throws Exception {
+        // Los endpoints de auth son públicos — no devuelven 401 ni 403
+        int status = mockMvc.perform(get("/api/v1/auth/login"))
+                .andReturn().getResponse().getStatus();
+        // Puede ser 405 (GET en endpoint POST) o 500, pero NO 401/403
+        assert status != 401 && status != 403 : "El endpoint de auth no debe requerir autenticación";
     }
 
     @Test
@@ -38,7 +46,7 @@ public class SecurityTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void whenAdminRole_thenAdminAuditIsAllowed() throws Exception {
-        // Un ADMIN sí debería poder entrar a la auditoría
+        // Un ADMIN sí puede acceder a la auditoría
         mockMvc.perform(get("/api/v1/admin/audit"))
                 .andExpect(status().isOk());
     }
@@ -47,7 +55,5 @@ public class SecurityTest {
     void publicEndpoints_shouldBeAccessible() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk());
-
-
     }
 }

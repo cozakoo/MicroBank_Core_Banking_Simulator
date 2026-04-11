@@ -15,4 +15,10 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     List<Account> findByStatus(AccountStatus estado);
 
     boolean existsByAccountNumber(String nroCuenta);
+
+    List<Account> findByOwnerId(UUID ownerId);
+
+    Optional<Account> findByAlias(String alias);
+
+    boolean existsByAlias(String alias);
 }

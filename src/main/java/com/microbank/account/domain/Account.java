@@ -58,6 +58,14 @@ public class Account {
     @Column(name = "status", nullable = false, length = 20)
     private AccountStatus status;
 
+    // Propietario de la cuenta — vinculado al usuario que la creó
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
+    // Alias opcional — permite transferir sin saber el número de cuenta (ej: "mi-cuenta-principal")
+    @Column(name = "alias", unique = true, length = 30)
+    private String alias;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -72,7 +80,12 @@ public class Account {
         this.accountNumber = accountNumber;
         this.accountType = accountType;
         this.balance = balance;
-        this.status = AccountStatus.ACTIVO; // toda cuenta nueva nace ACTIVA
+        this.status = AccountStatus.ACTIVO;
+    }
+
+    public Account(String accountNumber, AccountType accountType, BigDecimal balance, UUID ownerId) {
+        this(accountNumber, accountType, balance);
+        this.ownerId = ownerId;
     }
 
     public UUID getId() { return id; }
@@ -92,6 +105,14 @@ public class Account {
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public UUID getOwnerId() { return ownerId; }
+
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
+
+    public String getAlias() { return alias; }
+
+    public void setAlias(String alias) { this.alias = alias; }
 
     @PrePersist
     protected void onCreate() {

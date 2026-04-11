@@ -37,30 +37,23 @@ public class AccountResponse {
     @Schema(description = "Fecha y hora de la última actualización", example = "2026-04-05T12:30:00")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "Alias opcional de la cuenta (para transferir sin usar número)", example = "mi-cuenta-ahorros")
+    private String alias;
+
     public AccountResponse() {
     }
 
-    public AccountResponse(UUID id, String accountNumber, AccountType accountType, BigDecimal balance,
-                          AccountStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.accountNumber = accountNumber;
-        this.accountType = accountType;
-        this.balance = balance;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
     public static AccountResponse from(Account account) {
-        return new AccountResponse(
-                account.getId(),
-                account.getAccountNumber(),
-                account.getAccountType(),
-                account.getBalance(),
-                account.getStatus(),
-                account.getCreatedAt(),
-                account.getUpdatedAt()
-        );
+        AccountResponse r = new AccountResponse();
+        r.id = account.getId();
+        r.accountNumber = account.getAccountNumber();
+        r.accountType = account.getAccountType();
+        r.balance = account.getBalance();
+        r.status = account.getStatus();
+        r.createdAt = account.getCreatedAt();
+        r.updatedAt = account.getUpdatedAt();
+        r.alias = account.getAlias();
+        return r;
     }
 
     public UUID getId() {
@@ -118,6 +111,9 @@ public class AccountResponse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getAlias() { return alias; }
+    public void setAlias(String alias) { this.alias = alias; }
 
     @Override
     public String toString() {

@@ -18,9 +18,11 @@ public class TransferRequest {
     @Schema(description = "ID único de la cuenta origen (UUID)", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID sourceAccountId;
 
-    @NotNull(message = "El ID de cuenta destino es obligatorio")
-    @Schema(description = "ID único de la cuenta destino (UUID)", example = "550e8400-e29b-41d4-a716-446655440002")
+    @Schema(description = "ID único de la cuenta destino (UUID). Usar este O targetIdentifier.", example = "550e8400-e29b-41d4-a716-446655440002")
     private UUID targetAccountId;
+
+    @Schema(description = "Número de cuenta o alias de la cuenta destino (alternativa al UUID)", example = "ACC12345 o mi-cuenta")
+    private String targetIdentifier;
 
     @NotNull(message = "El monto es obligatorio")
     @Positive(message = "El monto debe ser mayor a cero")
@@ -52,6 +54,9 @@ public class TransferRequest {
     public void setTargetAccountId(UUID targetAccountId) {
         this.targetAccountId = targetAccountId;
     }
+
+    public String getTargetIdentifier() { return targetIdentifier; }
+    public void setTargetIdentifier(String targetIdentifier) { this.targetIdentifier = targetIdentifier; }
 
     public BigDecimal getAmount() {
         return amount;

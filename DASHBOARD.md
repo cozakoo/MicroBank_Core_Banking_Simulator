@@ -1,21 +1,28 @@
-# Dashboard Administrativo MicroBank — REQ-025
+# Dashboard MicroBank — v1.2.0
 
 ## Descripción General
 
-Dashboard administrativo de producción para el Simulador de Banca Central MicroBank. Interfaz elegante y profesional para gestionar cuentas bancarias y visualizar transacciones con datos en tiempo real desde las APIs REST.
+Dashboard bancario de MicroBank. Interfaz moderna para gestionar cuentas, realizar operaciones financieras y visualizar transacciones en tiempo real. Requiere autenticación JWT — cada usuario gestiona sus propias cuentas y puede transferir a cualquier cuenta del sistema.
 
 ## Funcionalidades
 
+### ✅ Autenticación JWT
+- **Registro** — Crear usuario con nombre y contraseña (mínimo 3 caracteres)
+- **Login** — Iniciar sesión → recibe token JWT válido 24h
+- **Logout** — Botón en navbar, limpia el token del navegador
+- **Protección automática** — Sin token, redirige a `/login.html`
+- Página: `http://localhost:8080/login.html`
+
 ### ✅ Estadísticas del Dashboard
-- **Cuentas Totales** — Cantidad global de cuentas activas
+- **Cuentas Totales** — Cuentas del usuario autenticado
 - **Cuentas Activas** — Conteo de cuentas en estado ACTIVO
 - **Cuentas Suspendidas** — Conteo de cuentas suspendidas
 
 ### ✅ Gestión de Cuentas
 
 #### Listar Cuentas
-- Tabla responsiva con detalles de todas las cuentas
-- Columnas: Número de Cuenta, Tipo, Saldo, Estado, Fecha de Creación, Acciones
+- Tabla responsiva con las cuentas del usuario autenticado
+- Columnas: Número de Cuenta (+ alias si tiene), Tipo, Saldo, Estado, Fecha de Creación, Acciones
 - Búsqueda/filtrado en tiempo real por número de cuenta
 - Badges de estado con código de colores:
   - 🟢 **ACTIVO** — Verde
@@ -45,10 +52,17 @@ Dashboard administrativo de producción para el Simulador de Banca Central Micro
 - Llamada a `POST /api/v1/accounts/{id}/withdraw`
 - Actualización automática del saldo
 
+#### Alias de Cuenta (🏷️)
+- Cada cuenta puede tener un alias único (ej: `mi-ahorro`, `gastos-fijos`)
+- Si no tiene alias, aparece el link `+ alias` en la tabla para asignarlo rápido
+- Reglas: solo minúsculas, números y guiones (`a-z`, `0-9`, `-`), 3–30 caracteres
+- Endpoint: `PUT /api/v1/accounts/{id}/alias`
+
 #### Transferencias (🔄)
-- Modal para transferir fondos entre cuentas
-- Selecciona cuenta origen (predefinida)
-- Dropdown de cuentas destino (solo ACTIVAS)
+- Modal con dos modos de selección de destino:
+  - **Mis cuentas** — Dropdown con tus cuentas ACTIVO
+  - **Número / Alias** — Campo libre para cualquier cuenta del sistema
+- Podés transferir a cuentas de otros usuarios usando su número o alias
 - Validaciones:
   - Monto > 0
   - Cuenta destino ≠ cuenta origen
@@ -102,16 +116,20 @@ src/main/resources/static/
 
 ## Endpoints de API Utilizados
 
-| Método | Endpoint | Propósito |
-|---|---|---|
-| GET | `/api/v1/accounts` | Listar todas las cuentas |
-| POST | `/api/v1/accounts` | Crear nueva cuenta |
-| GET | `/api/v1/accounts/{id}` | Obtener detalles de una cuenta |
-| PUT | `/api/v1/accounts/{id}/status` | Cambiar estado de cuenta |
-| POST | `/api/v1/accounts/{id}/deposit` | Depositar fondos |
-| POST | `/api/v1/accounts/{id}/withdraw` | Retirar fondos |
-| POST | `/api/v1/transfers` | Realizar transferencia entre cuentas |
-| GET | `/api/v1/transfers/account/{accountId}` | Obtener transacciones de una cuenta |
+| Método | Endpoint | Auth | Propósito |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | Público | Registrar nuevo usuario |
+| POST | `/api/v1/auth/login` | Público | Login → retorna JWT |
+| GET | `/api/v1/accounts` | JWT | Listar mis cuentas |
+| POST | `/api/v1/accounts` | JWT | Crear nueva cuenta |
+| GET | `/api/v1/accounts/{id}` | JWT | Detalles de cuenta |
+| PUT | `/api/v1/accounts/{id}/status` | JWT | Cambiar estado |
+| PUT | `/api/v1/accounts/{id}/alias` | JWT | Asignar alias |
+| GET | `/api/v1/accounts/search/{id}` | JWT | Buscar por número o alias |
+| POST | `/api/v1/accounts/{id}/deposit` | JWT | Depositar fondos |
+| POST | `/api/v1/accounts/{id}/withdraw` | JWT | Retirar fondos |
+| POST | `/api/v1/transfers` | JWT | Transferir por UUID/número/alias |
+| GET | `/api/v1/transfers/account/{id}` | JWT | Historial de transacciones |
 
 ## Formatos de Solicitud/Respuesta
 
@@ -348,23 +366,36 @@ Deberías ver el Dashboard Administrativo con:
 
 ## Checklist de Pruebas
 
-- [ ] Dashboard carga sin errores
-- [ ] Cards de estadísticas muestran conteos correctos
-- [ ] Crear cuenta: validación de campos
-- [ ] Búsqueda/filtrado funciona en tiempo real
+**Auth:**
+- [ ] Ir a `localhost:8080` → redirige a `/login.html`
+- [ ] Registrarse con usuario/contraseña (mínimo 3 caracteres)
+- [ ] Login → entra al dashboard
+- [ ] Logout → vuelve al login
+
+**Cuentas:**
+- [ ] Dashboard carga solo las cuentas del usuario autenticado
+- [ ] Crear cuenta: vinculada al usuario logueado
+- [ ] Asignar alias: click en `+ alias`, ingresar nombre válido
+- [ ] Alias aparece como `@nombre` debajo del número
+
+**Operaciones:**
 - [ ] Depositar: modal abre, procesa, saldo actualiza
 - [ ] Retirar: validación de saldo, actualización correcta
-- [ ] Transferencia: dropdown de destino, ambas cuentas actualizadas
+- [ ] Transferencia tab "Mis cuentas": dropdown de destino, ambas cuentas actualizadas
+- [ ] Transferencia tab "Número / Alias": ingresar número o alias de otra cuenta, transferir
 - [ ] Modal de transacciones: carga datos correctamente
 - [ ] Cambio de estado: advertencias visibles, actualización funciona
+
+**General:**
+- [ ] Cards de estadísticas muestran conteos correctos
+- [ ] Búsqueda/filtrado funciona en tiempo real
 - [ ] Notificaciones toast: aparecen y desaparecen
-- [ ] Responsivo en móvil (DevTools → Modo responsivo)
 - [ ] Sin errores en consola (F12 → Consola)
 
 ---
 
-**Stack:** HTML5 + Bootstrap 5 + JavaScript Vanilla + Spring Boot REST APIs
+**Stack:** HTML5 + Bootstrap 5 + JavaScript Vanilla + Spring Boot REST APIs + JWT
 **Desarrolladores:** Martín Arcos Vargas + Lucas
 **Estado:** ✅ Producción
-**Versión:** v1.0.0
+**Versión:** v1.2.0
 **Última Actualización:** 11 de abril, 2026

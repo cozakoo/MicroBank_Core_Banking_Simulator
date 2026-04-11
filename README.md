@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/Tests-JUnit%205%20%2B%20Mockito-25A162?style=flat-square)](https://junit.org/junit5/)
 [![Coverage](https://img.shields.io/badge/Coverage->80%25-4CAF50?style=flat-square)](https://www.jacoco.org/)
 [![Status](https://img.shields.io/badge/Status-✅%20Producción-green?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator)
-[![Version](https://img.shields.io/badge/Version-v1.0.0-blue?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-blue?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
 ## 👥 Colaboradores
 
@@ -125,7 +125,8 @@ docker-compose down
 
 **Servicios disponibles:**
 - 🌐 **MicroBank API**: http://localhost:8080
-- 📊 **Dashboard Admin**: http://localhost:8080/ (con interfaz gráfica)
+- 🔐 **Login**: http://localhost:8080/login.html
+- 📊 **Dashboard Admin**: http://localhost:8080/ (requiere login)
 - 📄 **Swagger UI**: http://localhost:8080/swagger-ui.html
 - 🗄 **pgAdmin** (Gestión de BD): http://localhost:5050
   - Email: `admin@microbank.com`
@@ -163,10 +164,12 @@ http://localhost:8080/
 
 ### ✨ Funcionalidades
 
+- **🔐 Autenticación JWT** — Registro e inicio de sesión con token seguro (24h de expiración)
 - **Crear Cuentas** — Formulario modal para nuevas cuentas (CORRIENTE, AHORRO, CRÉDITO)
+- **🏷️ Alias de Cuenta** — Asignar nombres cortos a cuentas para transferir sin usar números
 - **💰 Depositar** — Ingresar dinero a cualquier cuenta
 - **💸 Retirar** — Extraer fondos (con validación de saldo)
-- **🔄 Transferir** — Transferencias entre cuentas con locking ACID
+- **🔄 Transferir** — Por UUID, número de cuenta o alias (entre propias y de otros usuarios)
 - **📊 Ver Transacciones** — Historial completo de cada cuenta
 - **⚙️ Cambiar Estado** — Activar/Suspender/Cerrar cuentas
 - **🔍 Buscar** — Búsqueda en tiempo real por número de cuenta
@@ -195,29 +198,37 @@ http://localhost:8080/swagger-ui.html
 
 ### 📋 Endpoints Disponibles
 
-#### 1️⃣ **Account Management** (5 endpoints)
+#### 0️⃣ **Authentication** (2 endpoints) — públicos
 ```
-GET    /api/v1/accounts                    — Listar todas las cuentas
-GET    /api/v1/accounts/{id}               — Obtener cuenta por ID
-GET    /api/v1/accounts/number/{number}    — Obtener cuenta por número
-POST   /api/v1/accounts                    — Crear nueva cuenta
-PUT    /api/v1/accounts/{id}/status        — Cambiar estado de cuenta
+POST   /api/v1/auth/register               — Registrar nuevo usuario
+POST   /api/v1/auth/login                  — Iniciar sesión → retorna JWT
 ```
 
-#### 2️⃣ **Transfers** (3 endpoints)
+#### 1️⃣ **Account Management** (7 endpoints) — requieren JWT
 ```
-POST   /api/v1/transfers                   — Realizar transferencia
+GET    /api/v1/accounts                    — Listar mis cuentas (del usuario autenticado)
+GET    /api/v1/accounts/{id}               — Obtener cuenta por ID
+GET    /api/v1/accounts/number/{number}    — Obtener cuenta por número
+GET    /api/v1/accounts/search/{id}        — Buscar por número de cuenta o alias
+POST   /api/v1/accounts                    — Crear nueva cuenta (vinculada al usuario)
+PUT    /api/v1/accounts/{id}/status        — Cambiar estado de cuenta
+PUT    /api/v1/accounts/{id}/alias         — Asignar o cambiar alias de cuenta
+```
+
+#### 2️⃣ **Transfers** (3 endpoints) — requieren JWT
+```
+POST   /api/v1/transfers                   — Transferir por UUID, número o alias
 GET    /api/v1/transfers/{id}              — Obtener detalles de transferencia
 GET    /api/v1/transfers/account/{id}      — Listar transferencias de cuenta
 ```
 
-#### 3️⃣ **Deposits & Withdrawals** (2 endpoints)
+#### 3️⃣ **Deposits & Withdrawals** (2 endpoints) — requieren JWT
 ```
 POST   /api/v1/accounts/{id}/deposit       — Realizar depósito
 POST   /api/v1/accounts/{id}/withdraw      — Realizar retiro
 ```
 
-#### 4️⃣ **Audit (Admin)** (2 endpoints)
+#### 4️⃣ **Audit (Admin)** (2 endpoints) — requieren rol ADMIN
 ```
 GET    /api/v1/admin/audit                 — Listar todos los registros de auditoría
 GET    /api/v1/admin/audit/account/{id}    — Listar auditoría de cuenta específica
@@ -255,11 +266,13 @@ Luego importa en tu herramienta favorita y prueba los endpoints localmente.
 
 | Categoría | Tecnología |
 |:---|:---|
-| **Lenguaje** | Java 17 |
+| **Lenguaje** | Java 17+ |
 | **Framework** | Spring Boot 3.2.x |
 | **Persistencia** | Spring Data JPA / Hibernate |
 | **Validación** | Jakarta Validation (spring-boot-starter-validation) |
 | **Base de Datos** | PostgreSQL 15 |
+| **Autenticación** | Spring Security + JWT (jjwt 0.12.x) |
+| **Migraciones BD** | Flyway |
 | **Containerización** | Docker / Docker Compose |
 | **Documentación API** | Springdoc-OpenAPI (Swagger) |
 | **Frontend** | HTML5 + Bootstrap 5 + JavaScript Vanilla |
@@ -342,7 +355,7 @@ Decisiones arquitectónicas detalladas y justificadas en `docs/adr`:
 
 ### Releases & Versionado
 
-Versión actual: **v1.0.0** (Todas las fases completadas: DDD, API REST, Tests, Swagger, Dashboard Admin, Listo para Producción)
+Versión actual: **v1.2.0** (JWT Auth, alias de cuentas, transferencias por número/alias)
 
 Ver todas en [Releases](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
@@ -378,7 +391,7 @@ MicroBank se publica automáticamente en GitHub Packages. Para usar en otro proy
 <dependency>
     <groupId>com.microbank</groupId>
     <artifactId>microbank</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -412,30 +425,25 @@ docker-compose ps
 
 ## 📊 Estado del Proyecto
 
-### Versión Actual: v1.0.0 — ✅ PRODUCCIÓN
+### Versión Actual: v1.2.0 — ✅ PRODUCCIÓN
 
 ```
 ┌────────────────────────────────────────────────────────────┐
 │              FASES COMPLETADAS: 4 de 4                     │
 ├────────────────────────────────────────────────────────────┤
 │ ✅ Fase 1: Setup & Dominio            [COMPLETADA]        │
-│    - REQ-001 a REQ-004: 4/4            [100%]             │
-│                                                            │
 │ ✅ Fase 2: Lógica & Transacciones     [COMPLETADA]        │
-│    - REQ-005 a REQ-009: 5/5            [100%]             │
-│                                                            │
-│ ✅ Fase 3: REST API & Tests            [COMPLETADA]       │
-│    - REQ-010 a REQ-017: 8/8            [100%]             │
-│                                                            │
+│ ✅ Fase 3: REST API & Tests           [COMPLETADA]        │
 │ ✅ Fase 4: Infraestructura & Extras   [COMPLETADA]        │
-│    - REQ-018 a REQ-025: 8/8            [100%]             │
 ├────────────────────────────────────────────────────────────┤
 │ TOTAL: 25/25 Requerimientos            [100%] ✅          │
-│ Tests: 50+ pasando                     [100%]             │
-│ Cobertura: >80%                        [VERIFICADA]       │
+│ Tests: 61 pasando                      [100%]             │
 │ Build: SUCCESS                         [✓]                │
+│ Autenticación JWT: Implementada        [✓]                │
+│ Alias de Cuentas: Implementado         [✓]                │
+│ Transferencias por número/alias: [✓]                      │
 │ Documentación API: Swagger/OpenAPI     [✓]                │
-│ Dashboard Admin: Funcional              [✓]                │
+│ Dashboard Admin: Funcional             [✓]                │
 │ Estado: PRODUCCIÓN LISTA               [✓]                │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -444,16 +452,18 @@ docker-compose ps
 
 | Componente | Estado | Descripción |
 |---|---|---|
-| **Entidades de Dominio** | ✅ | Account, Transaction, AuditLog |
-| **Servicios de Negocio** | ✅ | AccountService, TransferService, DepositWithdrawService, AuditService |
-| **Persistencia (JPA)** | ✅ | Repositories con índices optimizados |
+| **Entidades de Dominio** | ✅ | Account (con alias y ownerId), Transaction, AuditLog, User |
+| **Autenticación JWT** | ✅ | Registro/login, token 24h, stateless, Spring Security |
+| **Servicios de Negocio** | ✅ | AccountService, TransferService, DepositWithdrawService, AuditService, AuthService |
+| **Persistencia (JPA)** | ✅ | Repositories con índices optimizados + Flyway migrations |
 | **Transacciones ACID** | ✅ | Locking pesimista, aislamiento READ_COMMITTED |
+| **Alias de Cuentas** | ✅ | Asignar nombres únicos, transferir por alias o número |
 | **Auditoría** | ✅ | Registro automático de todas las operaciones |
-| **Tests Unitarios** | ✅ | 50+ tests (Mockito, TestContainers, JUnit 5) |
+| **Tests** | ✅ | 61 tests pasando (Mockito, TestContainers, JUnit 5) |
 | **Docker** | ✅ | docker-compose.yml, Dockerfile, servicios completos |
-| **API REST Completa** | ✅ | 4 Controllers + 13 endpoints + Request/Response DTOs |
+| **API REST Completa** | ✅ | 5 Controllers + 16 endpoints + Request/Response DTOs |
 | **Documentación API (Swagger/OpenAPI)** | ✅ | Swagger UI + OpenAPI JSON + Ejemplos interactivos |
-| **Dashboard Admin** | ✅ | UI moderna, depósitos, retiros, transferencias, búsqueda |
+| **Dashboard Admin** | ✅ | Login, cuentas por usuario, alias, transferencias por número/alias |
 | **CI/CD** | ✅ | GitHub Actions pipeline configurado |
 
 ---
@@ -493,6 +503,14 @@ docker-compose ps
 - [x] REQ-024: Spring Security
 - [x] REQ-025: Dashboard Admin
 
+### v1.2.0 — Autenticación & Alias ✅
+- [x] Autenticación JWT (registro, login, token stateless)
+- [x] Cuentas vinculadas a usuario (ownerId)
+- [x] Alias de cuenta (único, transferir por alias)
+- [x] Transferencias por UUID, número de cuenta o alias
+- [x] Contraseña mínima 3 caracteres
+- [x] Login page (`/login.html`) con tabs registro/login
+
 ---
 
 ## ❌ Solucionar Problemas
@@ -531,5 +549,5 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-*Última actualización: 11 de abril, 2026 — Proyecto en Producción (v1.0.0)*
+*Última actualización: 11 de abril, 2026 — v1.2.0 (JWT Auth + Alias + Transferencias flexibles)*
 *Estado: ✅ Completado, Documentado, Testeado y Listo para Usar*

@@ -1,0 +1,2 @@
+ALTER TABLE cuentas ADD COLUMN IF NOT EXISTS alias VARCHAR(30);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cuentas_alias ON cuentas(alias) WHERE alias IS NOT NULL;

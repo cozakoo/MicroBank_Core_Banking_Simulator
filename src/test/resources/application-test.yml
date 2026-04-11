@@ -9,6 +9,12 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+  flyway:
+    enabled: false
+
+jwt:
+  secret: dGVzdHNlY3JldGtleXRlc3RzZWNyZXRrZXl0ZXN0c2VjcmV0a2V5dGVzdA==
+  expiration: 86400000
 
 logging:
   level:

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroBank — Iniciar Sesión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+        }
+        .brand-icon {
+            font-size: 3rem;
+            color: #4CAF50;
+        }
+        .form-control {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #4CAF50;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.25);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        .btn-primary {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            font-weight: 600;
+        }
+        .btn-primary:hover { background: #43A047; border-color: #43A047; }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+        }
+        #errorAlert { display: none; }
+        label { color: rgba(255,255,255,0.7); }
+        h5, p { color: #fff; }
+        small { color: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="text-center mb-4">
+        <div class="brand-icon"><i class="bi bi-bank2"></i></div>
+        <h5 class="mt-2 fw-bold">MicroBank</h5>
+        <small>Core Banking Simulator</small>
+    </div>
+
+    <!-- Tabs -->
+    <div class="d-flex mb-3 border-bottom border-secondary">
+        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Iniciar Sesión</button>
+        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Registrarse</button>
+    </div>
+
+    <div id="errorAlert" class="alert alert-danger py-2 small"></div>
+    <div id="successAlert" class="alert alert-success py-2 small" style="display:none;"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <input type="text" class="form-control" id="loginUsername" placeholder="nombre de usuario" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="loginPassword" placeholder="contraseña" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+        </button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
+        <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <input type="text" class="form-control" id="regUsername" placeholder="mínimo 3 caracteres" required minlength="3">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="regPassword" placeholder="mínimo 3 caracteres" required minlength="3">
+        </div>
+        <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+            <i class="bi bi-person-plus me-1"></i> Crear cuenta
+        </button>
+    </form>
+</div>
+
+<script>
+    const API = '/api/v1/auth';
+
+    // Si ya hay token, redirigir al dashboard
+    if (localStorage.getItem('mb_token')) {
+        window.location.href = '/';
+    }
+
+    function switchTab(tab) {
+        document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+        document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+        document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+        hideAlerts();
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorAlert');
+        el.textContent = msg;
+        el.style.display = 'block';
+        document.getElementById('successAlert').style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+        const el = document.getElementById('successAlert');
+        el.textContent = msg;
+        el.style.display = 'block';
+        document.getElementById('errorAlert').style.display = 'none';
+    }
+
+    function hideAlerts() {
+        document.getElementById('errorAlert').style.display = 'none';
+        document.getElementById('successAlert').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Entrando...';
+
+        try {
+            const res = await fetch(`${API}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUsername').value,
+                    password: document.getElementById('loginPassword').value
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Credenciales inválidas');
+            }
+
+            localStorage.setItem('mb_token', data.data.token);
+            localStorage.setItem('mb_username', data.data.username);
+            localStorage.setItem('mb_userId', data.data.userId);
+            window.location.href = '/';
+
+        } catch (err) {
+            showError(err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i> Entrar';
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const btn = document.getElementById('registerBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creando...';
+
+        try {
+            const res = await fetch(`${API}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('regUsername').value,
+                    password: document.getElementById('regPassword').value
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Error al registrarse');
+            }
+
+            localStorage.setItem('mb_token', data.data.token);
+            localStorage.setItem('mb_username', data.data.username);
+            localStorage.setItem('mb_userId', data.data.userId);
+            window.location.href = '/';
+
+        } catch (err) {
+            showError(err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-person-plus me-1"></i> Crear cuenta';
+        }
+    }
+</script>
+</body>
+</html>

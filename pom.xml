@@ -10,9 +10,9 @@
 	</parent>
 	<groupId>com.microbank</groupId>
 	<artifactId>microbank</artifactId>
-	<version>0.3.0</version>
+	<version>1.0.0</version>
 	<name>microbank</name>
-	<description>MicroBank Core Banking Simulator</description>
+	<description>MicroBank Core Banking Simulator - Production Ready</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

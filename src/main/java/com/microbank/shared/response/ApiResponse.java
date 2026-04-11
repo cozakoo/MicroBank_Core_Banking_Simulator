@@ -2,6 +2,20 @@ package com.microbank.shared.response;
 
 import java.time.LocalDateTime;
 
+/**
+ * WRAPPER GENÉRICO DE RESPUESTAS API (Martín)
+ *
+ * PATRÓN: Builder + Generic<T>
+ * Por qué:
+ * - Consistencia: TODAS las respuestas tienen la misma estructura (success, data, error, timestamp)
+ * - Type-safe: ApiResponse<AccountResponse> sabe qué tipo contiene
+ * - Sin try-catch en frontend: El cliente ve siempre {success: true/false, data: {...}, error: "..."}
+ * - Auditable: timestamp en CADA respuesta (útil para logs distribuidos)
+ *
+ * Uso:
+ *   - Éxito: ApiResponse.success(newAccount)
+ *   - Error: ApiResponse.error("Descripción del problema")
+ */
 public class ApiResponse<T> {
     private final boolean success;
     private final T data;

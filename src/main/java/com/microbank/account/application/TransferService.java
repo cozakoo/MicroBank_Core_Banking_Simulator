@@ -39,15 +39,27 @@ public class TransferService {
 
     /**
      * Ejecuta una transferencia de fondos entre dos cuentas.
-     * Garantiza atomicidad ACID con locking pesimista.
+     *
+     * ASPECTOS CRÍTICOS DE ESTA IMPLEMENTACIÓN (Martín):
+     * 1. ACID Guarantee: @Transactional asegura que si algo falla, TODO se revierte (rollback)
+     * 2. Pessimistic Locking: findById() usa @Lock(PESSIMISTIC_WRITE) en el repositorio
+     *    - Las cuentas se bloquean EN LA BD cuando se obtienen
+     *    - Evita race conditions en transferencias concurrentes
+     *    - Si dos threads transfieren simultáneamente, uno espera al otro (no hay corrupción de datos)
+     * 3. Deadlock Prevention: Ordenamos siempre por UUID (minId, maxId)
+     *    - Si múltiples transferencias suceden, siempre se lockean en el mismo orden
+     *    - Previene el deadlock circulante (A→B y B→A al mismo tiempo)
+     * 4. Isolation Level: READ_COMMITTED (no dirty reads, pero permite phantom reads)
+     *    - Balancee entre seguridad y performance (no usamos SERIALIZABLE para no bloquear BD)
+     * 5. Auditoría: Registramos TODAS las transferencias, exitosas o fallidas
+     *    - Cumplimiento regulatorio: toda operación financiera es trazable
      *
      * @param request DTO con IDs de cuentas origen/destino y monto
      * @return Transaction con status COMPLETED
-     * @throws InvalidAccountException si sourceId == targetId
-     * @throws InvalidAccountException si amount <= 0
+     * @throws InvalidAccountException si sourceId == targetId o amount <= 0
      * @throws AccountNotFoundException si alguna cuenta no existe
      * @throws InsufficientFundsException si balance insuficiente
-     * @throws AccountLockedException si no se puede adquirir el lock
+     * @throws AccountLockedException si no se puede adquirir el lock en tiempo (timeout)
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Transaction transferFunds(TransferRequest request) {
@@ -70,8 +82,13 @@ public class TransferService {
         }
 
         try {
-            // Obtener cuentas (en orden fijo para evitar deadlock)
-            // Orden: primero la menor UUID, luego la mayor
+            // ⚠️ ORDEN CRÍTICA DE LOCKS (Martín):
+            // Siempre lockeamos en el mismo orden (minId, luego maxId).
+            // Ejemplo: Si A→B y C→B suceden al mismo tiempo:
+            //   - A→B: lockea B primero (minId), luego A
+            //   - C→B: lockea B primero (minId), luego C
+            // Si NO ordenáramos: A→B lockea A primero, C→B lockea B primero → DEADLOCK
+            // Con orden fijo: Siempre B primero → Sin deadlock ✓
             UUID minId = sourceId.compareTo(targetId) < 0 ? sourceId : targetId;
             UUID maxId = sourceId.compareTo(targetId) < 0 ? targetId : sourceId;
 

@@ -10,6 +10,18 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * ENTIDAD ACCOUNT — Corazón del Dominio
+ *
+ * DECISIONES CLAVE (Martín):
+ * - Sin Lombok: Constructores/getters/equals/hashCode explícitos
+ *   (Razón: Mejor control, debugging más fácil, menos "magia")
+ * - BigDecimal para balance: NUNCA double (problemas de redondeo en dinero)
+ * - @PrePersist/@PreUpdate: Timestamps automáticos (no confiar en cliente)
+ * - Índices en numero_cuenta (búsqueda rápida) y status (reportes)
+ * - Status por defecto ACTIVO (simplifica lógica de negocio)
+ * - equals() basado SOLO en ID (JPA best practice)
+ */
 @Entity
 @Table(
         name = "cuentas",
@@ -33,6 +45,10 @@ public class Account {
     @Column(name = "tipo_cuenta", nullable = false, length = 20)
     private AccountType accountType;
 
+    // ⚠️ BigDecimal, NUNCA double (Martín):
+    // double sería: balance = 100.00 + 0.10 + 0.10 + 0.10 = 100.30000000000001
+    // BigDecimal asegura: 100.00 + 0.10 + 0.10 + 0.10 = 100.30 EXACTO
+    // precision=19, scale=4 permite hasta 999999999999999.9999
     @NotNull(message = "El balance es obligatorio")
     @Positive(message = "El balance debe ser mayor a cero")
     @Column(name = "balance", nullable = false, precision = 19, scale = 4)

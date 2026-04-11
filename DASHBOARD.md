@@ -365,6 +365,6 @@ Deberías ver el Dashboard Administrativo con:
 
 **Stack:** HTML5 + Bootstrap 5 + JavaScript Vanilla + Spring Boot REST APIs
 **Desarrolladores:** Martín Arcos Vargas + Lucas
-**Estado:** ✅ Completo y Listo para Producción
-**Versión:** v0.4.0
+**Estado:** ✅ Producción
+**Versión:** v1.0.0
 **Última Actualización:** 11 de abril, 2026

@@ -335,8 +335,17 @@ async function handleWithdraw() {
 }
 
 // ============================================
-// TRANSFER
+// TRANSFER — LÓGICA CRÍTICA EN FRONTEND (Martín)
 // ============================================
+// IMPORTANTE: El verdadero locking ACID ocurre en el backend (TransferService).
+// El frontend solo:
+//   1. Valida que sea != cuenta origen
+//   2. Valida que monto sea > 0
+//   3. Muestra solo cuentas ACTIVO como destino (seguridad preventiva)
+//   4. Envía request al backend
+//   5. El backend hace: lock BD → validaciones → transferencia → commit/rollback
+// Si una transferencia falla (409 Conflict = lock timeout), el usuario ve error claro.
+// El backend NUNCA deja datos corruptos, gracias a @Transactional.
 
 function prepareTransfer(sourceAccountId) {
     const sourceAccount = allAccounts.find(a => a.id === sourceAccountId);
@@ -381,6 +390,13 @@ async function handleTransfer() {
     submitTransferBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
 
     try {
+        // ENVIAR al backend con ambas cuentas (source y target)
+        // El backend se encargará del locking pesimista en orden UUID
+        // Posibles respuestas:
+        // - 201 CREATED: Transferencia OK
+        // - 400 BAD_REQUEST: Validación fallida (monto 0, cuenta no existe, balance insuficiente)
+        // - 404 NOT_FOUND: Una de las cuentas fue eliminada (race condition rara)
+        // - 409 CONFLICT: Lock timeout (otra transferencia occupaba el lock 30s+)
         const response = await fetch(`${API_BASE_URL}/transfers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -393,7 +409,9 @@ async function handleTransfer() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP Error: ${response.status}`);
+            // 409: Timeout de lock = "Intente nuevamente en un momento"
+            // 400: Validación = "Datos incorrectos, revise"
+            throw new Error(errorData.error || errorData.message || `HTTP Error: ${response.status}`);
         }
 
         transferModal.hide();

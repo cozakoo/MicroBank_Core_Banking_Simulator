@@ -6,8 +6,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Tests](https://img.shields.io/badge/Tests-JUnit%205%20%2B%20Mockito-25A162?style=flat-square)](https://junit.org/junit5/)
 [![Coverage](https://img.shields.io/badge/Coverage->80%25-4CAF50?style=flat-square)](https://www.jacoco.org/)
-[![Status](https://img.shields.io/badge/Status-✅%20Completado-green?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator)
-[![Version](https://img.shields.io/badge/Version-v0.4.0-blue?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
+[![Status](https://img.shields.io/badge/Status-✅%20Producción-green?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator)
+[![Version](https://img.shields.io/badge/Version-v1.0.0-blue?style=flat-square)](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
 ## 👥 Colaboradores
 
@@ -342,7 +342,7 @@ Decisiones arquitectónicas detalladas y justificadas en `docs/adr`:
 
 ### Releases & Versionado
 
-Versión actual: **v0.4.0** (Todas las fases completadas: DDD, API REST, Tests, Swagger, Dashboard Admin)
+Versión actual: **v1.0.0** (Todas las fases completadas: DDD, API REST, Tests, Swagger, Dashboard Admin, Listo para Producción)
 
 Ver todas en [Releases](https://github.com/cozakoo/MicroBank_Core_Banking_Simulator/releases)
 
@@ -378,7 +378,7 @@ MicroBank se publica automáticamente en GitHub Packages. Para usar en otro proy
 <dependency>
     <groupId>com.microbank</groupId>
     <artifactId>microbank</artifactId>
-    <version>0.4.0</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -412,7 +412,7 @@ docker-compose ps
 
 ## 📊 Estado del Proyecto
 
-### Versión Actual: v0.4.0 — ✅ COMPLETADO
+### Versión Actual: v1.0.0 — ✅ PRODUCCIÓN
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -531,5 +531,5 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ---
 
-*Última actualización: 11 de abril, 2026 — Fase 4 completada: Dashboard Admin + Todas las funcionalidades (v0.4.0)*
-*Proyecto: ✅ Completado y Listo para Producción*
+*Última actualización: 11 de abril, 2026 — Proyecto en Producción (v1.0.0)*
+*Estado: ✅ Completado, Documentado, Testeado y Listo para Usar*

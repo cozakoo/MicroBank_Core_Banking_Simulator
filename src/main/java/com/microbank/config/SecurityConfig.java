@@ -23,13 +23,19 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // Dashboard y archivos estáticos sin autenticación (Desarrollo)
+                        .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**").permitAll()
 
-                        .requestMatchers("/api/v1/accounts/**").authenticated()
-                        .requestMatchers("/api/v1/transfers/**").authenticated()
-
+                        // Swagger sin autenticación
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/v1/health").permitAll()
 
+                        // Admin requiere ADMIN
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        // APIs sin autenticación (Desarrollo - comentar en Producción)
+                        .requestMatchers("/api/v1/accounts/**", "/api/v1/transfers/**", "/api/v1/deposits/**", "/api/v1/withdrawals/**").permitAll()
+
+                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());

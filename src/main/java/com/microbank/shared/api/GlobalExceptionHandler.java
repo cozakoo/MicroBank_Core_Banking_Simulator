@@ -21,6 +21,23 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+/**
+ * MANEJADOR CENTRAL DE EXCEPCIONES (Martín)
+ *
+ * ESTRATEGIA DE ERRORES:
+ * - @RestControllerAdvice: TODOS los Controllers pasan por aquí
+ * - NO dejamos que excepciones sin manejo lleguen al cliente (500 genérico)
+ * - Mapeo de HTTP Status codes:
+ *   - 400 Bad Request: Validación fallida, request inválido, fondos insuficientes
+ *   - 404 Not Found: Cuenta/Transferencia no existe
+ *   - 409 Conflict: Cuenta bloqueada (contención de locks, timeout)
+ *   - 500 Internal Server Error: Errores no controlados (bugs)
+ * - Auditoría: CADA error se loguea (warn para esperados, error para inesperados)
+ * - Frontend: Siempre recibe {success: false, error: "descripción amigable"}
+ *
+ * IMPORTANTE: No exponemos detalles internos de BD, stack traces, etc.
+ * (El cliente NO necesita saber si es un timeout de BD o un deadlock)
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

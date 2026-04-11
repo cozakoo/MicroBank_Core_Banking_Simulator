@@ -52,7 +52,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Dashboard, login y archivos estáticos
-                        .requestMatchers("/", "/index.html", "/login.html", "/static/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/login.html", "/favicon.svg", "/favicon.ico", "/static/**", "/css/**", "/js/**").permitAll()
 
                         // Swagger y health
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/v1/health").permitAll()

@@ -4,217 +4,465 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MicroBank — Iniciar Sesión</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard.css">
     <style>
+        /* ── Auth layout ── */
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+
+        .auth-wrapper {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 2.5rem 1rem;
+            position: relative;
+            z-index: 1;
         }
-        .login-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 2.5rem;
+
+        /* ── Card ── */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
             width: 100%;
             max-width: 420px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+            overflow: hidden;
         }
-        .brand-icon {
-            font-size: 3rem;
-            color: #4CAF50;
+
+        .auth-accent {
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-accent) 0%, #3b82f6 100%);
         }
-        .form-control {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+
+        .auth-card-body {
+            padding: 2.25rem 2rem 2rem;
+        }
+
+        /* ── Brand ── */
+        .auth-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .auth-brand-icon {
+            width: 62px;
+            height: 62px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.35);
+            border-radius: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 28px rgba(76, 175, 80, 0.22);
+        }
+
+        .auth-brand-icon i {
+            font-size: 2rem;
+            color: var(--color-accent);
+        }
+
+        .auth-brand h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
             color: #fff;
+            margin: 0;
+            letter-spacing: -0.025em;
         }
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: #4CAF50;
-            color: #fff;
-            box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.25);
+
+        .auth-brand p {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin: 0;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
-        .form-control::placeholder { color: rgba(255,255,255,0.4); }
-        .btn-primary {
-            background: #4CAF50;
-            border-color: #4CAF50;
-            font-weight: 600;
+
+        /* ── Tabs ── */
+        .auth-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--color-border);
+            border-radius: 11px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
         }
-        .btn-primary:hover { background: #43A047; border-color: #43A047; }
-        .tab-btn {
+
+        .auth-tab-btn {
+            flex: 1;
             background: transparent;
-            border: none;
-            color: rgba(255,255,255,0.5);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 0.48rem 1rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            padding: 0.5rem 1.5rem;
-            border-bottom: 2px solid transparent;
+            color: var(--color-text-muted);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
+            font-family: var(--font-display);
         }
-        .tab-btn.active {
-            color: #4CAF50;
-            border-bottom-color: #4CAF50;
+
+        .auth-tab-btn.active {
+            background: var(--color-accent-dim);
+            border-color: rgba(76, 175, 80, 0.28);
+            color: var(--color-accent);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-        #errorAlert { display: none; }
-        label { color: rgba(255,255,255,0.7); }
-        h5, p { color: #fff; }
-        small { color: rgba(255,255,255,0.5); }
+
+        /* ── Alertas ── */
+        .auth-alert {
+            border-radius: 9px;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.84rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-alert.show { display: flex; }
+
+        .auth-alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.28);
+            color: #fca5a5;
+        }
+
+        .auth-alert-success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.28);
+            color: #86efac;
+        }
+
+        /* ── Inputs ── */
+        .auth-form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        .input-icon-wrap { position: relative; }
+
+        .input-icon-wrap .form-control {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--color-border);
+            border-radius: 9px;
+            padding: 0.65rem 0.9rem 0.65rem 2.5rem;
+            color: #fff;
+            font-size: 0.93rem;
+            transition: var(--transition);
+            width: 100%;
+            font-family: var(--font-display);
+        }
+
+        .input-icon-wrap .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--color-accent);
+            color: #fff;
+            box-shadow: 0 0 0 3px var(--color-accent-dim);
+            outline: none;
+        }
+
+        .input-icon-wrap .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.32);
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: color var(--transition);
+        }
+
+        .input-icon-wrap:focus-within .input-icon {
+            color: var(--color-accent);
+        }
+
+        /* ── Botón principal ── */
+        .auth-btn {
+            width: 100%;
+            padding: 0.72rem;
+            margin-top: 1.5rem;
+            border: none;
+            border-radius: 9px;
+            background: var(--color-accent);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            letter-spacing: 0.02em;
+            font-family: var(--font-display);
+        }
+
+        .auth-btn:hover:not(:disabled) {
+            background: var(--color-accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px var(--color-accent-glow);
+        }
+
+        .auth-btn:active:not(:disabled) { transform: none; }
+
+        .auth-btn:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+        }
+
+        /* ── Footer ── */
+        .site-footer { margin-top: 0; }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .auth-card-body { padding: 1.75rem 1.25rem 1.5rem; }
+            .auth-brand h1  { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body>
-<div class="login-card">
-    <div class="text-center mb-4">
-        <div class="brand-icon"><i class="bi bi-bank2"></i></div>
-        <h5 class="mt-2 fw-bold">MicroBank</h5>
-        <small>Core Banking Simulator</small>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-accent"></div>
+            <div class="auth-card-body">
+
+                <!-- Brand -->
+                <div class="auth-brand">
+                    <div class="auth-brand-icon">
+                        <i class="bi bi-bank2"></i>
+                    </div>
+                    <h1>MicroBank</h1>
+                    <p>Core Banking Simulator</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="auth-tabs" role="tablist">
+                    <button class="auth-tab-btn active" id="tabLogin"
+                            onclick="switchTab('login')" role="tab" aria-selected="true">
+                        Iniciar sesión
+                    </button>
+                    <button class="auth-tab-btn" id="tabRegister"
+                            onclick="switchTab('register')" role="tab" aria-selected="false">
+                        Crear cuenta
+                    </button>
+                </div>
+
+                <!-- Alertas -->
+                <div class="auth-alert auth-alert-error" id="errorAlert" role="alert">
+                    <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                    <span id="errorText"></span>
+                </div>
+                <div class="auth-alert auth-alert-success" id="successAlert" role="alert">
+                    <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+                    <span id="successText"></span>
+                </div>
+
+                <!-- Formulario login -->
+                <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+                    <div class="mb-3">
+                        <label class="auth-form-label" for="loginUsername">Usuario</label>
+                        <div class="input-icon-wrap">
+                            <input type="text" class="form-control" id="loginUsername"
+                                   placeholder="nombre de usuario"
+                                   autocomplete="username" required>
+                            <i class="bi bi-person input-icon"></i>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="auth-form-label" for="loginPassword">Contraseña</label>
+                        <div class="input-icon-wrap">
+                            <input type="password" class="form-control" id="loginPassword"
+                                   placeholder="••••••••"
+                                   autocomplete="current-password" required>
+                            <i class="bi bi-lock input-icon"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-btn" id="loginBtn">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Entrar
+                    </button>
+                </form>
+
+                <!-- Formulario registro -->
+                <form id="registerForm" onsubmit="handleRegister(event)" novalidate style="display:none;">
+                    <div class="mb-3">
+                        <label class="auth-form-label" for="regUsername">Usuario</label>
+                        <div class="input-icon-wrap">
+                            <input type="text" class="form-control" id="regUsername"
+                                   placeholder="mínimo 3 caracteres"
+                                   autocomplete="username" required minlength="3">
+                            <i class="bi bi-person input-icon"></i>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="auth-form-label" for="regPassword">Contraseña</label>
+                        <div class="input-icon-wrap">
+                            <input type="password" class="form-control" id="regPassword"
+                                   placeholder="mínimo 3 caracteres"
+                                   autocomplete="new-password" required minlength="3">
+                            <i class="bi bi-lock input-icon"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-btn" id="registerBtn">
+                        <i class="bi bi-person-plus"></i>
+                        Crear cuenta
+                    </button>
+                </form>
+
+            </div>
+        </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="d-flex mb-3 border-bottom border-secondary">
-        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Iniciar Sesión</button>
-        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Registrarse</button>
-    </div>
-
-    <div id="errorAlert" class="alert alert-danger py-2 small"></div>
-    <div id="successAlert" class="alert alert-success py-2 small" style="display:none;"></div>
-
-    <!-- Login Form -->
-    <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="mb-3">
-            <label class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="loginUsername" placeholder="nombre de usuario" required>
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container-fluid px-5">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span>🏦 MicroBank Core Banking Simulator</span>
+                    <span class="footer-version">1.2.0</span>
+                </div>
+                <div class="footer-devs">
+                    <span class="footer-label">Desarrollado por</span>
+                    <a href="https://github.com/cozakoo" target="_blank" class="footer-dev-link">
+                        <span class="dev-avatar">MA</span>
+                        <span>Martín Arcos Vargas</span>
+                    </a>
+                    <span class="footer-separator">·</span>
+                    <a href="https://github.com/Lkss01" target="_blank" class="footer-dev-link">
+                        <span class="dev-avatar">LS</span>
+                        <span>Lucas Astudillo</span>
+                    </a>
+                </div>
+                <div class="footer-stack">
+                    <span class="stack-badge">Java 17</span>
+                    <span class="stack-badge">Spring Boot 3.2</span>
+                    <span class="stack-badge">PostgreSQL 15</span>
+                    <span class="stack-badge">DDD</span>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="loginPassword" placeholder="contraseña" required>
-        </div>
-        <button type="submit" class="btn btn-primary w-100" id="loginBtn">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
-        </button>
-    </form>
+    </footer>
 
-    <!-- Register Form -->
-    <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
-        <div class="mb-3">
-            <label class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="regUsername" placeholder="mínimo 3 caracteres" required minlength="3">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="regPassword" placeholder="mínimo 3 caracteres" required minlength="3">
-        </div>
-        <button type="submit" class="btn btn-primary w-100" id="registerBtn">
-            <i class="bi bi-person-plus me-1"></i> Crear cuenta
-        </button>
-    </form>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API = '/api/v1/auth';
 
-<script>
-    const API = '/api/v1/auth';
-
-    // Si ya hay token, redirigir al dashboard
-    if (localStorage.getItem('mb_token')) {
-        window.location.href = '/';
-    }
-
-    function switchTab(tab) {
-        document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-        document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
-        document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
-        document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
-        hideAlerts();
-    }
-
-    function showError(msg) {
-        const el = document.getElementById('errorAlert');
-        el.textContent = msg;
-        el.style.display = 'block';
-        document.getElementById('successAlert').style.display = 'none';
-    }
-
-    function showSuccess(msg) {
-        const el = document.getElementById('successAlert');
-        el.textContent = msg;
-        el.style.display = 'block';
-        document.getElementById('errorAlert').style.display = 'none';
-    }
-
-    function hideAlerts() {
-        document.getElementById('errorAlert').style.display = 'none';
-        document.getElementById('successAlert').style.display = 'none';
-    }
-
-    async function handleLogin(e) {
-        e.preventDefault();
-        const btn = document.getElementById('loginBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Entrando...';
-
-        try {
-            const res = await fetch(`${API}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: document.getElementById('loginUsername').value,
-                    password: document.getElementById('loginPassword').value
-                })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Credenciales inválidas');
-            }
-
-            localStorage.setItem('mb_token', data.data.token);
-            localStorage.setItem('mb_username', data.data.username);
-            localStorage.setItem('mb_userId', data.data.userId);
+        if (localStorage.getItem('mb_token')) {
             window.location.href = '/';
-
-        } catch (err) {
-            showError(err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i> Entrar';
         }
-    }
 
-    async function handleRegister(e) {
-        e.preventDefault();
-        const btn = document.getElementById('registerBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creando...';
+        function switchTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('loginForm').style.display    = isLogin ? 'block' : 'none';
+            document.getElementById('registerForm').style.display = isLogin ? 'none'  : 'block';
+            document.getElementById('tabLogin').classList.toggle('active', isLogin);
+            document.getElementById('tabLogin').setAttribute('aria-selected', String(isLogin));
+            document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+            document.getElementById('tabRegister').setAttribute('aria-selected', String(!isLogin));
+            hideAlerts();
+        }
 
-        try {
-            const res = await fetch(`${API}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: document.getElementById('regUsername').value,
-                    password: document.getElementById('regPassword').value
-                })
-            });
+        function showError(msg) {
+            document.getElementById('errorText').textContent = msg;
+            document.getElementById('errorAlert').classList.add('show');
+            document.getElementById('successAlert').classList.remove('show');
+        }
 
-            const data = await res.json();
+        function showSuccess(msg) {
+            document.getElementById('successText').textContent = msg;
+            document.getElementById('successAlert').classList.add('show');
+            document.getElementById('errorAlert').classList.remove('show');
+        }
 
-            if (!res.ok) {
-                throw new Error(data.error || 'Error al registrarse');
+        function hideAlerts() {
+            document.getElementById('errorAlert').classList.remove('show');
+            document.getElementById('successAlert').classList.remove('show');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Entrando...';
+
+            try {
+                const res = await fetch(`${API}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('loginUsername').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Credenciales inválidas');
+
+                localStorage.setItem('mb_token',    data.data.token);
+                localStorage.setItem('mb_username', data.data.username);
+                localStorage.setItem('mb_userId',   data.data.userId);
+                window.location.href = '/';
+
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Entrar';
             }
-
-            localStorage.setItem('mb_token', data.data.token);
-            localStorage.setItem('mb_username', data.data.username);
-            localStorage.setItem('mb_userId', data.data.userId);
-            window.location.href = '/';
-
-        } catch (err) {
-            showError(err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-person-plus me-1"></i> Crear cuenta';
         }
-    }
-</script>
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creando cuenta...';
+
+            try {
+                const res = await fetch(`${API}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('regUsername').value,
+                        password: document.getElementById('regPassword').value
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error al registrarse');
+
+                localStorage.setItem('mb_token',    data.data.token);
+                localStorage.setItem('mb_username', data.data.username);
+                localStorage.setItem('mb_userId',   data.data.userId);
+                window.location.href = '/';
+
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-person-plus"></i> Crear cuenta';
+            }
+        }
+    </script>
 </body>
 </html>

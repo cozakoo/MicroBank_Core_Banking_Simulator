@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Fondo -->
+  <rect width="32" height="32" rx="6" fill="#1e3a8a"/>
+  <!-- Techo del banco -->
+  <polygon points="4,13 16,5 28,13" fill="#4CAF50"/>
+  <!-- Cuerpo del banco -->
+  <rect x="6" y="13" width="20" height="12" fill="#fff" opacity="0.9"/>
+  <!-- Columnas -->
+  <rect x="9"  y="14" width="3" height="10" fill="#1e3a8a"/>
+  <rect x="14.5" y="14" width="3" height="10" fill="#1e3a8a"/>
+  <rect x="20" y="14" width="3" height="10" fill="#1e3a8a"/>
+  <!-- Base -->
+  <rect x="4" y="25" width="24" height="2.5" rx="1" fill="#4CAF50"/>
+</svg>

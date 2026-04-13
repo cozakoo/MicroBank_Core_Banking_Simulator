@@ -194,11 +194,21 @@ function createAccountRow(account) {
             <td class="transaction-date">${createdAt}</td>
             <td class="actions-col">
                 <div class="action-buttons">
-                    <button class="btn btn-action btn-sm btn-deposit" data-account-id="${account.id}" title="Depositar">💰</button>
-                    <button class="btn btn-action btn-sm btn-withdraw" data-account-id="${account.id}" title="Retirar">💸</button>
-                    <button class="btn btn-action btn-sm btn-transfer" data-account-id="${account.id}" title="Transferir">🔄</button>
-                    <button class="btn btn-action btn-sm btn-view-transactions" data-account-id="${account.id}" title="Ver Transacciones">📊</button>
-                    <button class="btn btn-action btn-sm btn-update-status" data-account-id="${account.id}" title="Actualizar Estado">⚙️</button>
+                    <button class="btn btn-action btn-sm btn-deposit" data-account-id="${account.id}" title="Depositar">
+                        <i class="bi bi-arrow-down-circle"></i>
+                    </button>
+                    <button class="btn btn-action btn-sm btn-withdraw" data-account-id="${account.id}" title="Retirar">
+                        <i class="bi bi-arrow-up-circle"></i>
+                    </button>
+                    <button class="btn btn-action btn-sm btn-transfer" data-account-id="${account.id}" title="Transferir">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </button>
+                    <button class="btn btn-action btn-sm btn-view-transactions" data-account-id="${account.id}" title="Ver Transacciones">
+                        <i class="bi bi-card-list"></i>
+                    </button>
+                    <button class="btn btn-action btn-sm btn-update-status" data-account-id="${account.id}" title="Actualizar Estado">
+                        <i class="bi bi-gear"></i>
+                    </button>
                 </div>
             </td>
         </tr>

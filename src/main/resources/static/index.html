@@ -19,18 +19,18 @@
     <!-- Header -->
     <header class="navbar-wrapper mb-4">
         <nav class="navbar navbar-dark bg-navy">
-            <div class="container-fluid px-5">
-                <span class="navbar-brand mb-0 h1">
-                    <span class="bank-icon">🏦</span> MicroBank Admin
+            <div class="container-fluid px-3 px-md-5">
+                <span class="navbar-brand mb-0 h1 fs-5 fs-md-4">
+                    <i class="bi bi-bank2 text-success me-2"></i> <span class="d-none d-sm-inline">MicroBank</span>
                 </span>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="current-date" id="currentDate"></span>
+                <div class="d-flex align-items-center gap-2 gap-md-3">
+                    <span class="current-date d-none d-lg-inline" id="currentDate"></span>
                     <span class="badge bg-secondary text-navy">
                         <i class="bi bi-person-fill me-1"></i>
-                        <span id="currentUser">Usuario</span>
+                        <span id="currentUser" class="d-none d-md-inline">Usuario</span>
                     </span>
                     <button class="btn btn-sm btn-outline-light" onclick="logout()">
-                        <i class="bi bi-box-arrow-right me-1"></i> Salir
+                        <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline ms-1">Salir</span>
                     </button>
                 </div>
             </div>
@@ -44,7 +44,7 @@
             <div class="row g-4 mb-5">
                 <div class="col-md-4">
                     <div class="stat-card">
-                        <div class="stat-icon">👥</div>
+                        <div class="stat-icon"><i class="bi bi-people text-primary"></i></div>
                         <div class="stat-content">
                             <span class="stat-label">Cuentas totales</span>
                             <span class="stat-value" id="totalAccountsCount">0</span>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card">
-                        <div class="stat-icon">✅</div>
+                        <div class="stat-icon"><i class="bi bi-check-circle text-success"></i></div>
                         <div class="stat-content">
                             <span class="stat-label">Activas</span>
                             <span class="stat-value" id="activeAccountsCount">0</span>
@@ -62,7 +62,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card">
-                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-icon"><i class="bi bi-exclamation-triangle text-warning"></i></div>
                         <div class="stat-content">
                             <span class="stat-label">Suspendidas</span>
                             <span class="stat-value" id="suspendedAccountsCount">0</span>
@@ -88,7 +88,7 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <button class="btn btn-primary btn-create" id="createAccountBtn">
-                        <span class="btn-icon">➕</span> Crear cuenta
+                        <i class="bi bi-plus-lg me-1"></i> Crear cuenta
                     </button>
                 </div>
             </div>
@@ -124,7 +124,7 @@
         <!-- No Results Message -->
         <section id="noResultsSection" class="no-results-section" style="display: none;">
             <div class="text-center py-5">
-                <span class="no-results-icon">🔍</span>
+                <i class="bi bi-search no-results-icon text-muted"></i>
                 <p class="no-results-text">No se encontraron cuentas que coincidan con su búsqueda.</p>
             </div>
         </section>
@@ -259,7 +259,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="depositLabel">💰 Depositar Fondos</h5>
+                    <h5 class="modal-title" id="depositLabel"><i class="bi bi-cash-stack text-success me-2"></i> Depositar Fondos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -293,7 +293,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="withdrawLabel">💸 Retirar Fondos</h5>
+                    <h5 class="modal-title" id="withdrawLabel"><i class="bi bi-cash-coin text-warning me-2"></i> Retirar Fondos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -326,8 +326,8 @@
     <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="transferLabel">🔄 Transferir Fondos</h5>
+                <div class="modal-header border-0 pb-0"> 
+                    <h5 class="modal-title" id="transferLabel"><i class="bi bi-arrow-left-right text-primary me-2"></i> Transferir Fondos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -385,7 +385,7 @@
         <div class="container-fluid px-5">
             <div class="footer-inner">
                 <div class="footer-brand">
-                    <span>🏦 MicroBank Core Banking Simulator</span>
+                    <span><i class="bi bi-bank2 text-success me-1"></i> MicroBank Core Banking Simulator</span>
                     <span class="footer-version">1.2.0</span>
                 </div>
                 <div class="footer-devs">

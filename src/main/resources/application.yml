@@ -1,12 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/microbank
-    username: microbank
-    password: changeme
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/microbank}
+    username: ${SPRING_DATASOURCE_USERNAME:microbank}
+    password: ${SPRING_DATASOURCE_PASSWORD:changeme}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update  # Permite que Hibernate cree/actualice tablas faltantes
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: true
     properties:
       hibernate:
@@ -30,8 +30,8 @@ springdoc:
   show-actuator: false
 
 jwt:
-  secret: bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0
-  expiration: 86400000
+  secret: ${JWT_SECRET:bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0a2V5bXljc2VjcmV0}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 logging:
   level:

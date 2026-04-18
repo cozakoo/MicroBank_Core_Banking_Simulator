@@ -15,7 +15,7 @@
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/dashboard.css">
 </head>
-<body>
+<body style="visibility: hidden">
     <!-- Header -->
     <header class="navbar-wrapper mb-4">
         <nav class="navbar navbar-dark bg-navy">
@@ -43,27 +43,27 @@
         <section class="stats-section">
             <div class="row g-4 mb-5">
                 <div class="col-md-4">
-                    <div class="stat-card">
+                    <div class="stat-card d-flex align-items-center">
                         <div class="stat-icon"><i class="bi bi-people text-primary"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Cuentas totales</span>
+                        <div class="stat-content d-flex flex-column gap-1">
+                            <span class="stat-label">N° cuentas</span>
                             <span class="stat-value" id="totalAccountsCount">0</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card">
+                    <div class="stat-card d-flex align-items-center">
                         <div class="stat-icon"><i class="bi bi-check-circle text-success"></i></div>
-                        <div class="stat-content">
+                        <div class="stat-content d-flex flex-column gap-1">
                             <span class="stat-label">Activas</span>
                             <span class="stat-value" id="activeAccountsCount">0</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card">
+                    <div class="stat-card d-flex align-items-center">
                         <div class="stat-icon"><i class="bi bi-exclamation-triangle text-warning"></i></div>
-                        <div class="stat-content">
+                        <div class="stat-content d-flex flex-column gap-1">
                             <span class="stat-label">Suspendidas</span>
                             <span class="stat-value" id="suspendedAccountsCount">0</span>
                         </div>
@@ -76,7 +76,7 @@
         <section class="controls-section mb-4">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <div class="search-wrapper">
+                    <div class="search-wrapper position-relative">
                         <input
                             type="text"
                             id="searchInput"
@@ -381,26 +381,26 @@
     </div>
 
     <!-- Footer -->
-    <footer class="site-footer">
+    <footer class="site-footer mt-5" >
         <div class="container-fluid px-5">
-            <div class="footer-inner">
-                <div class="footer-brand">
+            <div class="footer-inner d-flex align-items-center justify-content-between flex-wrap">
+                <div class="footer-brand d-flex align-items-center gap-2">
                     <span><i class="bi bi-bank2 text-success me-1"></i> MicroBank Core Banking Simulator</span>
                     <span class="footer-version">1.2.0</span>
                 </div>
-                <div class="footer-devs">
+                <div class="footer-devs d-flex align-items-center gap-2">
                     <span class="footer-label">Desarrollado por</span>
                     <a href="https://github.com/cozakoo" target="_blank" class="footer-dev-link">
-                        <span class="dev-avatar">MA</span>
+                        <span class="dev-avatar d-inline-flex align-items-center justify-content-center">MA</span>
                         <span>Martín Arcos Vargas</span>
                     </a>
                     <span class="footer-separator">·</span>
                     <a href="https://github.com/Lkss01" target="_blank" class="footer-dev-link">
-                        <span class="dev-avatar">LS</span>
+                        <span class="dev-avatar d-inline-flex align-items-center justify-content-center">LS</span>
                         <span>Lucas Astudillo</span>
                     </a>
                 </div>
-                <div class="footer-stack">
+                <div class="footer-stack d-flex align-items-center flex-wrap gap-1">
                     <span class="stack-badge">Java 17</span>
                     <span class="stack-badge">Spring Boot 3.2</span>
                     <span class="stack-badge">PostgreSQL 15</span>

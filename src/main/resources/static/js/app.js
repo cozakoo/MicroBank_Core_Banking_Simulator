@@ -12,6 +12,8 @@ const currentUsername = localStorage.getItem('mb_username');
 
 if (!token) {
     window.location.href = '/login.html';
+} else {
+    document.body.style.visibility = 'visible';
 }
 
 // Headers con JWT para todas las requests autenticadas
@@ -193,7 +195,7 @@ function createAccountRow(account) {
             <td><span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span></td>
             <td class="transaction-date">${createdAt}</td>
             <td class="actions-col">
-                <div class="action-buttons">
+                <div class="action-buttons d-flex justify-content-end">
                     <button class="btn btn-action btn-sm btn-deposit" data-account-id="${account.id}" title="Depositar">
                         <i class="bi bi-arrow-down-circle"></i>
                     </button>

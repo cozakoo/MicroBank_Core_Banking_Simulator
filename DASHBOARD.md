@@ -14,7 +14,7 @@ Dashboard bancario de MicroBank. Interfaz moderna para gestionar cuentas, realiz
 - Página: `http://localhost:8080/login.html`
 
 ### ✅ Estadísticas del Dashboard
-- **Cuentas Totales** — Cuentas del usuario autenticado
+- **N° Cuentas** — Cuentas del usuario autenticado
 - **Cuentas Activas** — Conteo de cuentas en estado ACTIVO
 - **Cuentas Suspendidas** — Conteo de cuentas suspendidas
 

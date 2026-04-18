@@ -50,23 +50,12 @@
         }
 
         /* ── Brand ── */
-        .auth-brand {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 1.75rem;
-        }
-
         .auth-brand-icon {
             width: 62px;
             height: 62px;
             background: rgba(76, 175, 80, 0.15);
             border: 1px solid rgba(76, 175, 80, 0.35);
             border-radius: 17px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             box-shadow: 0 8px 28px rgba(76, 175, 80, 0.22);
         }
 
@@ -93,16 +82,13 @@
 
         /* ── Tabs ── */
         .auth-tabs {
-            display: flex;
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--color-border);
             border-radius: 11px;
             padding: 4px;
-            margin-bottom: 1.5rem;
         }
 
         .auth-tab-btn {
-            flex: 1;
             background: transparent;
             border: 1px solid transparent;
             border-radius: 8px;
@@ -129,9 +115,6 @@
             font-size: 0.84rem;
             font-weight: 500;
             display: none;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
         }
 
         .auth-alert.show { display: flex; }
@@ -156,8 +139,6 @@
             margin-bottom: 0.4rem;
             display: block;
         }
-
-        .input-icon-wrap { position: relative; }
 
         .input-icon-wrap .form-control {
             background: rgba(255, 255, 255, 0.07);
@@ -200,10 +181,7 @@
 
         /* ── Botón principal ── */
         .auth-btn {
-            width: 100%;
             padding: 0.72rem;
-            margin-top: 1.5rem;
-            border: none;
             border-radius: 9px;
             background: var(--color-accent);
             color: #fff;
@@ -211,10 +189,6 @@
             font-size: 0.95rem;
             cursor: pointer;
             transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
             letter-spacing: 0.02em;
             font-family: var(--font-display);
         }
@@ -250,8 +224,8 @@
             <div class="auth-card-body">
 
                 <!-- Brand -->
-                <div class="auth-brand">
-                    <div class="auth-brand-icon">
+                <div class="auth-brand d-flex flex-column align-items-center gap-2 mb-4">
+                    <div class="auth-brand-icon d-flex align-items-center justify-content-center">
                         <i class="bi bi-bank2"></i>
                     </div>
                     <h1>MicroBank</h1>
@@ -259,23 +233,23 @@
                 </div>
 
                 <!-- Tabs -->
-                <div class="auth-tabs" role="tablist">
-                    <button class="auth-tab-btn active" id="tabLogin"
+                <div class="auth-tabs d-flex mb-4" role="tablist">
+                    <button class="auth-tab-btn flex-fill active" id="tabLogin"
                             onclick="switchTab('login')" role="tab" aria-selected="true">
                         Iniciar sesión
                     </button>
-                    <button class="auth-tab-btn" id="tabRegister"
+                    <button class="auth-tab-btn flex-fill" id="tabRegister"
                             onclick="switchTab('register')" role="tab" aria-selected="false">
                         Crear cuenta
                     </button>
                 </div>
 
                 <!-- Alertas -->
-                <div class="auth-alert auth-alert-error" id="errorAlert" role="alert">
+                <div class="auth-alert auth-alert-error align-items-center gap-2 mb-3" id="errorAlert" role="alert">
                     <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
                     <span id="errorText"></span>
                 </div>
-                <div class="auth-alert auth-alert-success" id="successAlert" role="alert">
+                <div class="auth-alert auth-alert-success align-items-center gap-2 mb-3" id="successAlert" role="alert">
                     <i class="bi bi-check-circle-fill flex-shrink-0"></i>
                     <span id="successText"></span>
                 </div>
@@ -284,7 +258,7 @@
                 <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
                     <div class="mb-3">
                         <label class="auth-form-label" for="loginUsername">Usuario</label>
-                        <div class="input-icon-wrap">
+                        <div class="input-icon-wrap position-relative">
                             <input type="text" class="form-control" id="loginUsername"
                                    placeholder="nombre de usuario"
                                    autocomplete="username" required>
@@ -293,14 +267,14 @@
                     </div>
                     <div class="mb-1">
                         <label class="auth-form-label" for="loginPassword">Contraseña</label>
-                        <div class="input-icon-wrap">
+                        <div class="input-icon-wrap position-relative">
                             <input type="password" class="form-control" id="loginPassword"
                                    placeholder="••••••••"
                                    autocomplete="current-password" required>
                             <i class="bi bi-lock input-icon"></i>
                         </div>
                     </div>
-                    <button type="submit" class="auth-btn" id="loginBtn">
+                    <button type="submit" class="auth-btn w-100 d-flex align-items-center justify-content-center gap-2 mt-4 border-0" id="loginBtn">
                         <i class="bi bi-box-arrow-in-right"></i>
                         Entrar
                     </button>
@@ -310,7 +284,7 @@
                 <form id="registerForm" onsubmit="handleRegister(event)" novalidate style="display:none;">
                     <div class="mb-3">
                         <label class="auth-form-label" for="regUsername">Usuario</label>
-                        <div class="input-icon-wrap">
+                        <div class="input-icon-wrap position-relative">
                             <input type="text" class="form-control" id="regUsername"
                                    placeholder="mínimo 3 caracteres"
                                    autocomplete="username" required minlength="3">
@@ -319,14 +293,14 @@
                     </div>
                     <div class="mb-1">
                         <label class="auth-form-label" for="regPassword">Contraseña</label>
-                        <div class="input-icon-wrap">
+                        <div class="input-icon-wrap position-relative">
                             <input type="password" class="form-control" id="regPassword"
                                    placeholder="mínimo 3 caracteres"
                                    autocomplete="new-password" required minlength="3">
                             <i class="bi bi-lock input-icon"></i>
                         </div>
                     </div>
-                    <button type="submit" class="auth-btn" id="registerBtn">
+                    <button type="submit" class="auth-btn w-100 d-flex align-items-center justify-content-center gap-2 mt-4 border-0" id="registerBtn">
                         <i class="bi bi-person-plus"></i>
                         Crear cuenta
                     </button>
@@ -339,24 +313,24 @@
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container-fluid px-5">
-            <div class="footer-inner">
-                <div class="footer-brand">
+            <div class="footer-inner d-flex align-items-center justify-content-between flex-wrap">
+                <div class="footer-brand d-flex align-items-center gap-2">
                     <span>🏦 MicroBank Core Banking Simulator</span>
                     <span class="footer-version">1.2.0</span>
                 </div>
-                <div class="footer-devs">
+                <div class="footer-devs d-flex align-items-center gap-2">
                     <span class="footer-label">Desarrollado por</span>
                     <a href="https://github.com/cozakoo" target="_blank" class="footer-dev-link">
-                        <span class="dev-avatar">MA</span>
+                        <span class="dev-avatar d-inline-flex align-items-center justify-content-center">MA</span>
                         <span>Martín Arcos Vargas</span>
                     </a>
                     <span class="footer-separator">·</span>
                     <a href="https://github.com/Lkss01" target="_blank" class="footer-dev-link">
-                        <span class="dev-avatar">LS</span>
+                        <span class="dev-avatar d-inline-flex align-items-center justify-content-center">LS</span>
                         <span>Lucas Astudillo</span>
                     </a>
                 </div>
-                <div class="footer-stack">
+                <div class="footer-stack d-flex align-items-center flex-wrap gap-1">
                     <span class="stack-badge">Java 17</span>
                     <span class="stack-badge">Spring Boot 3.2</span>
                     <span class="stack-badge">PostgreSQL 15</span>

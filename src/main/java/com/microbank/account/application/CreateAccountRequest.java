@@ -4,6 +4,7 @@ import com.microbank.account.domain.AccountType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Digits;
 
 import java.math.BigDecimal;
 
@@ -20,6 +21,7 @@ public class CreateAccountRequest {
 
     @NotNull(message = "El balance inicial es obligatorio")
     @Positive(message = "El balance debe ser mayor a cero")
+    @Digits(integer = 12, fraction = 2, message = "El balance supera el límite máximo permitido (12 dígitos)")
     @Schema(description = "Balance inicial de la cuenta en dólares (debe ser mayor a cero)", example = "5000.00")
     private BigDecimal initialBalance;
 

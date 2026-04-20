@@ -48,6 +48,9 @@ const updateStatusModal = new bootstrap.Modal(document.getElementById('updateSta
 const depositModal = new bootstrap.Modal(document.getElementById('depositModal'));
 const withdrawModal = new bootstrap.Modal(document.getElementById('withdrawModal'));
 const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+const setAliasModal = new bootstrap.Modal(document.getElementById('setAliasModal'));
+const submitAliasBtn = document.getElementById('submitAliasBtn');
+let currentAliasAccountId = null;
 
 const createAccountForm = document.getElementById('createAccountForm');
 const submitCreateBtn = document.getElementById('submitCreateBtn');
@@ -217,22 +220,47 @@ function createAccountRow(account) {
     `;
 }
 
-async function promptSetAlias(accountId) {
-    const alias = prompt('Ingresá un alias para esta cuenta\n(solo minúsculas, números y guiones, ej: mi-ahorro):');
-    if (!alias) return;
-    try {
-        const res = await fetch(`${API_BASE_URL}/accounts/${accountId}/alias`, {
-            method: 'PUT',
-            headers: authHeaders(),
-            body: JSON.stringify({ alias: alias.toLowerCase().trim() })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error al asignar alias');
-        showToast(`Alias "@${alias}" asignado correctamente`, 'success');
-        loadAccounts();
-    } catch (err) {
-        showToast(err.message, 'error');
-    }
+function promptSetAlias(accountId) {
+    currentAliasAccountId = accountId;
+    document.getElementById('newAliasInput').value = '';
+    setAliasModal.show();
+}
+
+if (submitAliasBtn) {
+    submitAliasBtn.addEventListener('click', async () => {
+        const alias = document.getElementById('newAliasInput').value.toLowerCase().trim();
+
+        if (!/^[a-z0-9\-\.]+$/.test(alias)) {
+            // Frenamos acá y mostramos el error directamente adentro del modal
+            showModalError('setAliasModal', 'Formato inválido. Usá solo letras, números, guiones medios o puntos (.).');
+            return;
+        }
+
+        if (document.activeElement) document.activeElement.blur();
+
+        submitAliasBtn.disabled = true;
+        submitAliasBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/accounts/${currentAliasAccountId}/alias`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ alias: alias })
+            });
+
+            if (!res.ok) await handleApiError(res);
+
+            showToast(`Alias "@${alias}" asignado correctamente`, 'success');
+            setAliasModal.hide();
+            loadAccounts();
+        } catch (err) {
+            showModalError('setAliasModal', err.message);
+            showToast(err.message, 'error');
+        } finally {
+            submitAliasBtn.disabled = false;
+            submitAliasBtn.innerHTML = 'Guardar Alias';
+        }
+    });
 }
 
 // ============================================
@@ -263,10 +291,7 @@ async function handleCreateAccount() {
             body: JSON.stringify({ accountType, initialBalance })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) await handleApiError(response);
 
         const data = await response.json();
         const newAccount = data.data;
@@ -280,6 +305,8 @@ async function handleCreateAccount() {
         resetCreateForm();
     } catch (error) {
         console.error('Error creating account:', error);
+        // Mostrar error dentro del modal
+        showModalError('createAccountModal', error.message);
         showToast(`Error: ${error.message}`, 'error');
     } finally {
         submitCreateBtn.disabled = false;
@@ -334,16 +361,13 @@ async function handleDeposit() {
             body: JSON.stringify({ accountId: operationAccountId, amount })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) await handleApiError(response);
 
         depositModal.hide();
         showToast(`Depósito de ${formatCurrency(amount)} completado exitosamente.`, 'success');
         await loadAccounts();
     } catch (error) {
-        console.error('Error en el depósito:', error);
+        showModalError('depositModal', error.message);
         showToast(`Error: ${error.message}`, 'error');
     } finally {
         submitDepositBtn.disabled = false;
@@ -384,16 +408,13 @@ async function handleWithdraw() {
             body: JSON.stringify({ accountId: operationAccountId, amount })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) await handleApiError(response);
 
         withdrawModal.hide();
         showToast(`Retiro de ${formatCurrency(amount)} completado exitosamente.`, 'success');
         await loadAccounts();
     } catch (error) {
-        console.error('Error en el retiro:', error);
+        showModalError('withdrawModal', error.message);
         showToast(`Error: ${error.message}`, 'error');
     } finally {
         submitWithdrawBtn.disabled = false;
@@ -489,18 +510,13 @@ async function handleTransfer() {
             body: JSON.stringify(body)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            // 409: Timeout de lock = "Intente nuevamente en un momento"
-            // 400: Validación = "Datos incorrectos, revise"
-            throw new Error(errorData.error || errorData.message || `HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) await handleApiError(response);
 
         transferModal.hide();
         showToast(`Transferencia de ${formatCurrency(amount)} completada exitosamente.`, 'success');
         await loadAccounts();
     } catch (error) {
-        console.error('Error en la transferencia:', error);
+        showModalError('transferModal', error.message);
         showToast(`Error: ${error.message}`, 'error');
     } finally {
         submitTransferBtn.disabled = false;
@@ -631,10 +647,7 @@ async function handleUpdateStatus() {
             body: JSON.stringify({ newStatus: newStatusSelect.value })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP Error: ${response.status}`);
-        }
+        if (!response.ok) await handleApiError(response);
 
         const data = await response.json();
         const updatedAccount = data.data;
@@ -694,15 +707,17 @@ function showToast(message, type = 'info') {
 
     const icon = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' }[type] || 'ℹ';
 
+    const isHtml = /<[a-z][\s\S]*>/i.test(message);
     toastEl.innerHTML = `
         <div class="toast-body">
             <strong style="font-size: 1.1rem; margin-right: 0.5rem;">${icon}</strong>
-            ${escapeHtml(message)}
+            ${isHtml ? message : escapeHtml(message)}
         </div>
     `;
 
     toastContainer.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), 4000);
+    const duration = type === 'error' ? 7000 : 4000;
+    setTimeout(() => toastEl.remove(), duration);
 }
 
 // ============================================
@@ -744,6 +759,53 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+async function handleApiError(response) {
+    let errorData;
+    try {
+        errorData = await response.json();
+    } catch (e) {
+        throw new Error(`HTTP Error: ${response.status} - Sin detalles del servidor`);
+    }
+
+    // Si el backend mandó un mensaje general, lo usamos. Si no, ponemos uno por defecto.
+    let errMsg = errorData.error || errorData.message || 'Error en la operación';
+
+    // Si Spring Boot mandó el mapa "details" con los errores de tus DTOs...
+    if (errorData.details && Object.keys(errorData.details).length > 0) {
+        // Unimos todos los mensajes con un salto de línea y una viñeta para que se lea prolijo
+        const detallados = Object.values(errorData.details).join('<br>• ');
+        errMsg += `<br>• ${detallados}`;
+    }
+
+    throw new Error(errMsg);
+}
+
+function showModalError(modalId, message) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Remover error anterior si existe
+    modal.querySelector('.modal-inline-error')?.remove();
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'modal-inline-error alert d-flex align-items-start gap-2 mt-3';
+    errorDiv.style.cssText = 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:8px;font-size:.87rem;padding:.75rem 1rem;';
+
+    const isHtml = /<[a-z][\s\S]*>/i.test(message);
+    errorDiv.innerHTML = `
+        <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-1" style="color:#f87171;"></i>
+        <div>${isHtml ? message : escapeHtml(message)}</div>
+    `;
+
+    // Insertarlo antes del footer del modal
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody) modalBody.appendChild(errorDiv);
+
+    // Auto-remover al cerrar el modal
+    modal.addEventListener('hidden.bs.modal', () => errorDiv.remove(), { once: true });
+}
+
 
 window.addEventListener('error', (event) => console.error('Global error:', event.error));
 window.addEventListener('unhandledrejection', (event) => console.error('Unhandled rejection:', event.reason));

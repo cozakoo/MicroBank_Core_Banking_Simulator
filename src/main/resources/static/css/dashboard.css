@@ -887,8 +887,45 @@ main {
     .navbar-brand  { font-size: 1.1rem; }
     .bank-icon     { font-size: 1.2rem; }
     .btn-create    { width: 100%; justify-content: center; }
+
+    /* Footer responsive */
+    .site-footer {
+        padding: var(--spacing-md) 0;
+    }
+
     .footer-stack  { display: none; }
-    .footer-inner  { flex-direction: column; align-items: center; text-align: center; gap: var(--spacing-sm); }
+
+    .footer-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--spacing-sm);
+        width: 100%;
+    }
+
+    .footer-brand {
+        width: 100%;
+        margin-bottom: var(--spacing-xs);
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--spacing-xs);
+    }
+
+    .footer-devs {
+        width: 100%;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .footer-dev-link {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .footer-separator {
+        display: none;
+    }
 
     /* Ajustes para modales en celular */
     .modal-body { padding: var(--spacing-md); }

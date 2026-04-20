@@ -380,6 +380,39 @@
         </div>
     </div>
 
+    <!-- alias Modal -->
+    <div class="modal fade" id="setAliasModal" tabindex="-1" aria-labelledby="setAliasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="setAliasLabel"><i class="bi bi-at text-info me-2"></i>Asignar Alias</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label for="newAliasInput" class="form-label">Nuevo Alias</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent text-muted border-end-0">@</span>
+                            <input
+                                    type="text"
+                                    class="form-control border-start-0 ps-0"
+                                    id="newAliasInput"
+                                    placeholder="ej: juan_perez"
+                            >
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            Solo minúsculas, números, guiones medios (-) y puntos (.).
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success text-white" id="submitAliasBtn">Guardar Alias</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="site-footer mt-5" >
         <div class="container-fluid px-5">
